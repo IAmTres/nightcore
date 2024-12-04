@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - NightcoreAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="min-h-screen flex flex-col content-overlay">
+        <!-- Header -->
+        <header class="py-6 px-8 flex justify-between items-center border-b border-purple-800 glass-effect">
+            <div class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 flex items-center">
+                <img src="/images/logo.png" alt="Nightcore Logo" class="h-10 w-10 mr-2">
+                Nightcore
+            </div>
+            <nav class="space-x-6">
+                <a href="/" class="hover:text-purple-400 transition-colors">Home</a>
+                <a href="/about.html" class="hover:text-purple-400 transition-colors">About</a>
+                <a href="/gallery.html" class="hover:text-purple-400 transition-colors">Gallery</a>
+                <div class="relative inline-block">
+                    <button class="flex items-center space-x-2 text-purple-400">
+                        <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=nightcore" alt="Avatar" class="w-8 h-8 rounded-full">
+                        <span>NightcoreLover</span>
+                        <i class="fas fa-chevron-down text-sm"></i>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-8 py-12">
+            <div class="max-w-4xl mx-auto">
+                <!-- Profile Header -->
+                <div class="glass-effect p-8 rounded-2xl mb-8">
+                    <div class="flex items-center space-x-8">
+                        <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=nightcore" alt="Profile Picture" class="w-24 h-24 rounded-full border-4 border-purple-500">
+                        <div>
+                            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                                NightcoreLover ✨
+                            </h1>
+                            <p class="text-purple-300">Joined December 2023</p>
+                        </div>
+                        <button class="btn-secondary ml-auto">Edit Profile</button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="profile-stat">
+                        <span class="text-purple-300">Tracks Created</span>
+                        <span class="text-2xl font-bold text-purple-400">42</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="text-purple-300">Total Plays</span>
+                        <span class="text-2xl font-bold text-purple-400">1.2K</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="text-purple-300">Favorites</span>
+                        <span class="text-2xl font-bold text-purple-400">128</span>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="glass-effect p-8 rounded-2xl">
+                    <h2 class="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                        Recent Activity
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 p-4 glass-effect rounded-xl">
+                            <i class="fas fa-music text-2xl text-purple-400"></i>
+                            <div>
+                                <h3 class="font-bold">Created "Running in the 90s - Nightcore Remix"</h3>
+                                <p class="text-sm text-purple-300">2 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4 p-4 glass-effect rounded-xl">
+                            <i class="fas fa-heart text-2xl text-purple-400"></i>
+                            <div>
+                                <h3 class="font-bold">Liked "Everytime We Touch - Nightcore Version"</h3>
+                                <p class="text-sm text-purple-300">Yesterday</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4 p-4 glass-effect rounded-xl">
+                            <i class="fas fa-comment text-2xl text-purple-400"></i>
+                            <div>
+                                <h3 class="font-bold">Commented on "Dragostea Din Tei Remix"</h3>
+                                <p class="text-sm text-purple-300">2 days ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="py-6 px-8 border-t border-purple-800 glass-effect">
+            <div class="text-center text-gray-400">
+                2024 NightcoreAI ✨ Transforming Music with Magic
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

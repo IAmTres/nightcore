@@ -1,0 +1,13 @@
+{
+    "name": "nightcore-generator",
+    "version": "1.0.0",
+    "description": "A web application for generating nightcore versions of audio tracks",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@fal-ai/client": "^1.2.0",
+        "express": "^4.17.1"
+    }
+}

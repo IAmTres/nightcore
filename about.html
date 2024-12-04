@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - NightcoreAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-image: url('https://cdn.midjourney.com/7b2ac079-f1b0-45c6-99de-308d7d9f6d46/0_1.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: black;
+        }
+        .content-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .glass-effect {
+            background: rgba(128, 0, 128, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        @keyframes sparkle {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        .sparkle {
+            animation: sparkle 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col content-overlay">
+        <!-- Header -->
+        <header class="py-6 px-8 flex justify-between items-center border-b border-purple-800 glass-effect">
+            <div class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 flex items-center">
+                <img src="/images/logo.png" alt="Nightcore Logo" class="h-10 w-10 mr-2">
+                Nightcore
+            </div>
+            <nav class="space-x-6">
+                <a href="/" class="hover:text-purple-400 transition-colors">Home</a>
+                <a href="/about.html" class="text-purple-400">About</a>
+                <a href="/gallery.html" class="hover:text-purple-400 transition-colors">Gallery</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-8 py-12">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-5xl font-bold mb-8 text-center sparkle">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
+                         Welcome to the Nightcore Revolution! 
+                    </span>
+                </h1>
+
+                <div class="space-y-8">
+                    <!-- What is Nightcore Section -->
+                    <section class="hover-scale glass-effect p-8 rounded-2xl">
+                        <h2 class="text-3xl font-bold mb-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                            <i class="fas fa-star-half-alt mr-2"></i>What is Nightcore? 
+                        </h2>
+                        <p class="text-gray-300 leading-relaxed text-lg">
+                            Get ready to experience music like never before!  Nightcore isn't just music - it's pure energy unleashed! 
+                            Born from the heart of Norway's dance scene, we take your favorite tracks and transform them into high-energy, 
+                            euphoric experiences that will make your heart race! Whether you're a longtime fan or just discovering the magic 
+                            of Nightcore, you're about to embark on an incredible musical journey! 
+                        </p>
+                    </section>
+
+                    <!-- Our Magic Section -->
+                    <section class="hover-scale glass-effect p-8 rounded-2xl">
+                        <h2 class="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500">
+                            <i class="fas fa-magic mr-2"></i>Our Nightcore Magic 
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="glass-effect p-6 rounded-xl">
+                                <i class="fas fa-bolt text-4xl text-purple-400 mb-4"></i>
+                                <h3 class="text-xl font-bold mb-2">Instant Magic </h3>
+                                <p class="text-gray-300">Transform your tracks in seconds with our turbocharged engine!</p>
+                            </div>
+                            <div class="glass-effect p-6 rounded-xl">
+                                <i class="fas fa-wand-sparkles text-4xl text-purple-400 mb-4"></i>
+                                <h3 class="text-xl font-bold mb-2">AI Power </h3>
+                                <p class="text-gray-300">Smart algorithms that understand your music's soul!</p>
+                            </div>
+                            <div class="glass-effect p-6 rounded-xl">
+                                <i class="fas fa-palette text-4xl text-purple-400 mb-4"></i>
+                                <h3 class="text-xl font-bold mb-2">Anime Magic </h3>
+                                <p class="text-gray-300">Generate stunning anime covers for your tracks!</p>
+                            </div>
+                            <div class="glass-effect p-6 rounded-xl">
+                                <i class="fas fa-headphones text-4xl text-purple-400 mb-4"></i>
+                                <h3 class="text-xl font-bold mb-2">Crystal Clear </h3>
+                                <p class="text-gray-300">Experience every beat in stunning high quality!</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Fun Facts -->
+                    <section class="hover-scale glass-effect p-8 rounded-2xl">
+                        <h2 class="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                            <i class="fas fa-star mr-2"></i>Nightcore Facts! 
+                        </h2>
+                        <div class="space-y-4 text-lg">
+                            <p class="text-gray-300"><i class="fas fa-star text-purple-400 mr-2"></i>Born in Norway 2002 by two awesome DJs! </p>
+                            <p class="text-gray-300"><i class="fas fa-star text-purple-400 mr-2"></i>Makes music 25-30% faster & more energetic! </p>
+                            <p class="text-gray-300"><i class="fas fa-star text-purple-400 mr-2"></i>Huge in anime & gaming communities! </p>
+                            <p class="text-gray-300"><i class="fas fa-star text-purple-400 mr-2"></i>Some tracks get more views than originals! </p>
+                        </div>
+                    </section>
+
+                    <!-- How It Works -->
+                    <section class="hover-scale glass-effect p-8 rounded-2xl">
+                        <h2 class="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500">
+                            <i class="fas fa-rocket mr-2"></i>Ready to Transform? 
+                        </h2>
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="flex-1 text-center glass-effect p-6 rounded-xl">
+                                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                    <i class="fas fa-upload text-3xl text-purple-400"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">1. Drop Your Track </h3>
+                                <p class="text-gray-300">Any song you love!</p>
+                            </div>
+                            <div class="flex-1 text-center glass-effect p-6 rounded-xl">
+                                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                    <i class="fas fa-wand-magic-sparkles text-3xl text-purple-400"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">2. Magic Time! </h3>
+                                <p class="text-gray-300">Watch it transform!</p>
+                            </div>
+                            <div class="flex-1 text-center glass-effect p-6 rounded-xl">
+                                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                    <i class="fas fa-heart text-3xl text-purple-400"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">3. Feel the Energy! </h3>
+                                <p class="text-gray-300">Experience the magic!</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="py-6 px-8 border-t border-purple-800 glass-effect">
+            <div class="text-center text-gray-400">
+                2024 NightcoreAI  Transforming Music with Magic
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

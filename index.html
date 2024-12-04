@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nightcore Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-black text-white">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="py-6 px-8 flex justify-between items-center border-b border-purple-800 glass-effect">
+            <div class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 flex items-center">
+                <img src="/images/logo.png" alt="Nightcore Logo" class="h-10 w-10 mr-2">
+                Nightcore
+            </div>
+            <nav class="space-x-6">
+                <a href="/" class="text-purple-400">Home</a>
+                <a href="/about.html" class="hover:text-purple-400 transition-colors">About</a>
+                <a href="/login.html" class="hover:text-purple-400 transition-colors">Login</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-8 py-12">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl font-bold mb-4 animate-pulse">
+                    Transform Your Music into
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                        Nightcore Magic
+                    </span>
+                </h1>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                    Experience the future of music transformation with our AI-powered Nightcore generator.
+                    Upload your track and watch it transform into an energetic masterpiece.
+                </p>
+            </div>
+
+            <!-- Upload Section -->
+            <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
+                <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
+                <p class="text-lg mb-2">Drop your audio file here</p>
+                <p class="text-sm text-gray-400">or click to upload</p>
+                <input type="file" id="audio-input" class="hidden" accept="audio/*">
+            </div>
+
+            <!-- Audio Player -->
+            <div id="audio-player" class="mt-8 hidden">
+                <div class="flex flex-col items-center space-y-4">
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full w-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-100"></div>
+                    </div>
+                    <div class="w-full flex justify-between text-sm text-gray-400">
+                        <span id="current-time">0:00</span>
+                        <span id="total-time">0:00</span>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="flex items-center justify-between bg-black/50 p-4 rounded-lg mb-4">
+                        <button id="play-btn" class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button id="download-btn" class="hidden px-6 py-2 bg-green-500 rounded-full hover:bg-green-600 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Download Nightcore Version
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="py-6 px-8 border-t border-purple-800">
+            <div class="text-center text-gray-400">
+                2024 NightcoreAI. All rights reserved.
+            </div>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
