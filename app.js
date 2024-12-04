@@ -31,28 +31,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle file upload
     async function handleFile(file) {
-        if (!file || !file.type.startsWith('audio/')) return;
+        if (!file || !file.type.startsWith('audio/')) {
+            alert('Please upload an audio file');
+            return;
+        }
         
         cleanup();
 
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const reader = new FileReader();
+            const arrayBuffer = await file.arrayBuffer();
             
-            reader.onload = async (e) => {
-                try {
-                    audioBuffer = await audioContext.decodeAudioData(e.target.result);
-                    document.getElementById('audio-player').classList.remove('hidden');
-                    downloadBtn.classList.remove('hidden');
-                    totalTime.textContent = formatTime(audioBuffer.duration);
-                } catch (error) {
-                    console.error('Error decoding audio:', error);
-                    cleanup();
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            try {
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                document.getElementById('audio-player').classList.remove('hidden');
+                downloadBtn.classList.remove('hidden');
+                totalTime.textContent = formatTime(audioBuffer.duration);
+                progressBar.style.width = '0%';
+                currentTime.textContent = '0:00';
+                
+                // Store original audio data
+                window.originalAudioBuffer = audioBuffer;
+            } catch (error) {
+                console.error('Error decoding audio:', error);
+                alert('Error decoding audio file. Please try a different file.');
+                cleanup();
+            }
         } catch (error) {
             console.error('Error setting up audio:', error);
+            alert('Error setting up audio. Please try again.');
             cleanup();
         }
     }
@@ -120,6 +127,137 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Download functionality
+    async function downloadNightcoreVersion() {
+        if (!audioBuffer) {
+            alert('Please upload an audio file first');
+            return;
+        }
+
+        try {
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+
+            // Calculate the new length for 1.3x speed
+            const speedRatio = 1.3;
+            const newLength = Math.ceil(audioBuffer.length / speedRatio);
+            
+            // Create an offline context
+            const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(
+                audioBuffer.numberOfChannels,
+                newLength,
+                audioBuffer.sampleRate
+            );
+
+            // Create source node
+            const source = offlineCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.playbackRate.value = speedRatio;
+
+            // Create gain node to prevent clipping
+            const gainNode = offlineCtx.createGain();
+            gainNode.gain.value = 0.9;
+
+            // Connect nodes
+            source.connect(gainNode);
+            gainNode.connect(offlineCtx.destination);
+
+            // Start the source and render
+            source.start(0);
+            const renderedBuffer = await offlineCtx.startRendering();
+
+            // Convert to WAV
+            const wav = new Blob([
+                createWaveFileData(renderedBuffer)
+            ], {
+                type: 'audio/wav'
+            });
+
+            // Create download link
+            const url = window.URL.createObjectURL(wav);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'nightcore-version.wav';
+
+            // Trigger download
+            document.body.appendChild(a);
+            a.click();
+
+            // Cleanup
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            console.error('Error creating nightcore version:', error);
+            alert('Error processing audio. Please try again.');
+        } finally {
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = '<i class="fas fa-download mr-2"></i>Download Nightcore Version';
+        }
+    }
+
+    // Helper function to create WAV file data
+    function createWaveFileData(audioBuffer) {
+        const numberOfChannels = audioBuffer.numberOfChannels;
+        const length = audioBuffer.length;
+        const sampleRate = audioBuffer.sampleRate;
+        const bitsPerSample = 16;
+        const byteRate = sampleRate * numberOfChannels * bitsPerSample / 8;
+        const blockAlign = numberOfChannels * bitsPerSample / 8;
+        const wavDataByteLength = length * numberOfChannels * 2; // 2 bytes per sample
+        const headerByteLength = 44;
+        const totalLength = headerByteLength + wavDataByteLength;
+        const waveFileData = new Uint8Array(totalLength);
+        const view = new DataView(waveFileData.buffer);
+
+        // RIFF chunk descriptor
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + wavDataByteLength, true);
+        writeString(view, 8, 'WAVE');
+
+        // fmt sub-chunk
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numberOfChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitsPerSample, true);
+
+        // data sub-chunk
+        writeString(view, 36, 'data');
+        view.setUint32(40, wavDataByteLength, true);
+
+        // write PCM samples
+        const channelData = [];
+        const samples = new Float32Array(length);
+
+        // Get audio data from each channel
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+            channelData[channel] = audioBuffer.getChannelData(channel);
+        }
+
+        let offset = 44;
+        for (let i = 0; i < length; i++) {
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                let sample = Math.max(-1, Math.min(1, channelData[channel][i]));
+                sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                view.setInt16(offset, sample, true);
+                offset += 2;
+            }
+        }
+
+        return waveFileData;
+    }
+
+    function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
     // Event Listeners
     uploadZone.onclick = () => audioInput.click();
     uploadZone.ondragover = (e) => {
@@ -133,8 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
         handleFile(e.dataTransfer.files[0]);
     };
     audioInput.onchange = () => handleFile(audioInput.files[0]);
-
     playBtn.onclick = playAudio;
+    downloadBtn.onclick = downloadNightcoreVersion;
 
     window.addEventListener('beforeunload', cleanup);
 
