@@ -1,6 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getAuth, onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -17,24 +18,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 let currentUser = null;
 let userData = null;
 
-// Wait for Firebase Auth to initialize
-function waitForAuth() {
-    return new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            unsubscribe(); // Unsubscribe once we get the auth state
-            resolve(user);
-        });
-    });
-}
-
+// Initialize profile
 async function initializeProfile() {
     try {
         // Wait for Firebase Auth to initialize and get user
-        const user = await waitForAuth();
+        const user = await new Promise((resolve) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                unsubscribe();
+                resolve(user);
+            });
+        });
         
         if (!user) {
             console.log('No user found, redirecting to login');
@@ -57,10 +55,12 @@ async function initializeProfile() {
             userData = {
                 name: user.displayName || user.email.split('@')[0],
                 email: user.email,
-                tokens: 5, // Starting tokens
+                tokens: 5,
                 isPremium: false,
                 joinDate: new Date().toISOString(),
-                createdTracks: []
+                createdTracks: [],
+                bio: '',
+                awards: []
             };
             await setDoc(userDoc, userData);
             console.log('New user data created:', userData);
@@ -68,13 +68,11 @@ async function initializeProfile() {
         
         updateProfileInfo();
         setupEventListeners();
+        setupTabNavigation();
+        loadUserSongs();
     } catch (error) {
         console.error('Error initializing profile:', error);
-        // Show error message to user
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'bg-red-500 bg-opacity-20 text-red-300 p-4 rounded-lg mb-6';
-        errorDiv.textContent = 'Error loading profile. Please try refreshing the page.';
-        document.querySelector('main').prepend(errorDiv);
+        showError('Error loading profile. Please try refreshing the page.');
     }
 }
 
@@ -82,11 +80,13 @@ async function initializeProfile() {
 function updateProfileInfo() {
     if (!currentUser) return;
 
-    // Update profile picture if available
-    const profilePic = document.querySelector('img[alt="Profile Picture"]');
-    if (profilePic && currentUser.photoURL) {
-        profilePic.src = currentUser.photoURL;
-    }
+    // Update profile picture
+    const profilePics = document.querySelectorAll('img[alt="Profile Picture"]');
+    profilePics.forEach(pic => {
+        if (currentUser.photoURL) {
+            pic.src = currentUser.photoURL;
+        }
+    });
 
     // Update username
     const profileName = document.querySelector('h1');
@@ -120,13 +120,34 @@ function updateProfileInfo() {
         }
     }
 
-    // Calculate next reset date
-    const nextReset = document.getElementById('nextReset');
-    if (nextReset) {
-        const today = new Date();
-        const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const days = Math.ceil((nextWeek - today) / (1000 * 60 * 60 * 24));
-        nextReset.textContent = `${days} days`;
+    // Update profile form
+    const displayNameInput = document.getElementById('display-name');
+    const bioInput = document.getElementById('bio');
+    if (displayNameInput) displayNameInput.value = userData.name;
+    if (bioInput) bioInput.value = userData.bio || '';
+
+    // Update stats
+    const memberSince = document.getElementById('member-since');
+    const totalSongs = document.getElementById('total-songs');
+    const awards = document.getElementById('awards');
+
+    if (memberSince) {
+        const date = new Date(userData.joinDate);
+        memberSince.textContent = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+    }
+
+    if (totalSongs) {
+        totalSongs.textContent = `${userData.createdTracks?.length || 0} songs`;
+    }
+
+    if (awards) {
+        awards.innerHTML = '';
+        (userData.awards || []).forEach(award => {
+            const awardIcon = document.createElement('i');
+            awardIcon.className = `fas fa-${award.icon} text-yellow-400 text-xl`;
+            awardIcon.title = award.name;
+            awards.appendChild(awardIcon);
+        });
     }
 }
 
@@ -156,26 +177,183 @@ function setupEventListeners() {
         });
     });
 
-    // Handle premium upgrade
-    const upgradeButton = document.getElementById('upgrade-btn');
-    if (upgradeButton) {
-        upgradeButton.addEventListener('click', async () => {
-            if (!currentUser) return;
+    // Handle profile image upload
+    const avatarUpload = document.getElementById('avatar-upload');
+    const changeAvatarBtn = document.getElementById('change-avatar-btn');
+
+    if (changeAvatarBtn) {
+        changeAvatarBtn.addEventListener('click', () => {
+            avatarUpload.click();
+        });
+    }
+
+    if (avatarUpload) {
+        avatarUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
             try {
-                // Update premium status in Firestore
-                const userDoc = doc(db, 'users', currentUser.uid);
-                userData.isPremium = true;
-                await setDoc(userDoc, userData);
+                const storageRef = ref(storage, `avatars/${currentUser.uid}`);
+                await uploadBytes(storageRef, file);
+                const photoURL = await getDownloadURL(storageRef);
                 
+                await updateProfile(currentUser, { photoURL });
                 updateProfileInfo();
-                alert('Successfully upgraded to Premium!');
             } catch (error) {
-                console.error('Upgrade error:', error);
-                alert('Failed to process upgrade. Please try again.');
+                console.error('Error uploading avatar:', error);
+                showError('Failed to upload profile picture. Please try again.');
             }
         });
     }
+
+    // Handle profile form submission
+    const profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const displayName = document.getElementById('display-name').value;
+            const bio = document.getElementById('bio').value;
+
+            try {
+                await updateProfile(currentUser, { displayName });
+                
+                const userDoc = doc(db, 'users', currentUser.uid);
+                userData.name = displayName;
+                userData.bio = bio;
+                await setDoc(userDoc, userData);
+
+                updateProfileInfo();
+                showSuccess('Profile updated successfully!');
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showError('Failed to update profile. Please try again.');
+            }
+        });
+    }
+}
+
+// Setup tab navigation
+function setupTabNavigation() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tab = button.dataset.tab;
+            
+            // Update button states
+            tabButtons.forEach(btn => {
+                btn.classList.remove('text-purple-400', 'border-purple-500');
+                btn.classList.add('text-purple-300');
+            });
+            button.classList.add('text-purple-400', 'border-purple-500');
+            button.classList.remove('text-purple-300');
+
+            // Update content visibility
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+                if (content.id === `${tab}-tab`) {
+                    content.classList.remove('hidden');
+                }
+            });
+        });
+    });
+}
+
+// Load user's songs
+async function loadUserSongs() {
+    if (!currentUser) return;
+
+    try {
+        const songsGrid = document.getElementById('songs-grid');
+        const songCount = document.getElementById('songCount');
+        
+        if (!songsGrid) return;
+
+        // Get user's songs from Firestore
+        const songsQuery = query(
+            collection(db, 'songs'),
+            where('userId', '==', currentUser.uid)
+        );
+        const songsSnapshot = await getDocs(songsQuery);
+        const songs = [];
+
+        songsSnapshot.forEach(doc => {
+            songs.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Update song count
+        if (songCount) {
+            songCount.textContent = songs.length;
+        }
+
+        // Clear existing songs
+        songsGrid.innerHTML = '';
+
+        // Add songs to grid
+        songs.forEach(song => {
+            const songCard = document.createElement('div');
+            songCard.className = 'p-6 rounded-xl bg-purple-900 bg-opacity-50';
+            songCard.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="font-bold text-lg">${song.title}</h3>
+                        <p class="text-purple-300 text-sm">Created ${new Date(song.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <span class="flex items-center text-purple-300">
+                        <i class="fas fa-heart mr-1"></i>${song.likes || 0}
+                    </span>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors flex-1">
+                        <i class="fas fa-download mr-2"></i>Download
+                    </button>
+                    <button class="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors flex-1">
+                        <i class="fas fa-share mr-2"></i>Share
+                    </button>
+                    <button class="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors flex-1">
+                        <i class="fas fa-plus mr-2"></i>Add to Playlist
+                    </button>
+                </div>
+            `;
+            songsGrid.appendChild(songCard);
+        });
+
+        // Show empty state if no songs
+        if (songs.length === 0) {
+            songsGrid.innerHTML = `
+                <div class="col-span-2 text-center py-12">
+                    <i class="fas fa-music text-4xl text-purple-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">No Songs Yet</h3>
+                    <p class="text-purple-300">Start creating your first Nightcore track!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading songs:', error);
+        showError('Failed to load songs. Please try refreshing the page.');
+    }
+}
+
+// Show error message
+function showError(message) {
+    const main = document.querySelector('main');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'fixed top-4 right-4 bg-red-500 bg-opacity-20 text-red-300 p-4 rounded-lg';
+    errorDiv.textContent = message;
+    main.appendChild(errorDiv);
+    setTimeout(() => errorDiv.remove(), 5000);
+}
+
+// Show success message
+function showSuccess(message) {
+    const main = document.querySelector('main');
+    const successDiv = document.createElement('div');
+    successDiv.className = 'fixed top-4 right-4 bg-green-500 bg-opacity-20 text-green-300 p-4 rounded-lg';
+    successDiv.textContent = message;
+    main.appendChild(successDiv);
+    setTimeout(() => successDiv.remove(), 5000);
 }
 
 // Initialize profile when DOM is loaded

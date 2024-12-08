@@ -29,7 +29,6 @@
                         <span>Profile</span>
                         <i class="fas fa-chevron-down transition-transform duration-200"></i>
                     </button>
-                    <!-- Dropdown menu -->
                     <div class="absolute right-0 mt-2 w-48 bg-purple-900 bg-opacity-90 backdrop-blur-md rounded-xl shadow-lg py-1 hidden" id="profile-menu">
                         <a href="/profile.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors">
                             <i class="fas fa-user mr-2"></i>My Profile
@@ -54,82 +53,149 @@
                 <!-- Profile Header -->
                 <div class="glass-effect p-8 rounded-2xl mb-8">
                     <div class="flex items-center space-x-8">
-                        <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=nightcore" alt="Profile Picture" class="w-24 h-24 rounded-full border-4 border-purple-500">
+                        <div class="relative group">
+                            <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=nightcore" alt="Profile Picture" class="w-24 h-24 rounded-full border-4 border-purple-500">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" id="change-avatar-btn">
+                                <i class="fas fa-camera text-white text-xl"></i>
+                            </div>
+                            <input type="file" id="avatar-upload" class="hidden" accept="image/*">
+                        </div>
                         <div>
                             <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                                NightcoreLover ✨
+                                Loading...
                             </h1>
-                            <p class="text-purple-300">Joined December 2023</p>
+                            <p class="text-purple-300 mt-2">Joined December 2023</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Token System -->
-                <div class="glass-effect p-8 rounded-2xl mb-8">
-                    <h2 class="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                        <i class="fas fa-coins mr-2"></i>Your Tokens
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- Token Balance -->
-                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-xl font-semibold text-purple-300">Available Tokens</h3>
-                                <span class="text-3xl font-bold text-yellow-400" id="tokenBalance">2</span>
+                <!-- Tabs -->
+                <div class="mb-8">
+                    <div class="flex space-x-4 border-b border-purple-800">
+                        <button class="px-6 py-3 text-purple-400 border-b-2 border-purple-500 tab-button active" data-tab="tokens">
+                            <i class="fas fa-coins mr-2"></i>Tokens
+                        </button>
+                        <button class="px-6 py-3 text-purple-300 hover:text-purple-400 tab-button" data-tab="songs">
+                            <i class="fas fa-music mr-2"></i>My Songs
+                        </button>
+                        <button class="px-6 py-3 text-purple-300 hover:text-purple-400 tab-button" data-tab="profile">
+                            <i class="fas fa-user-edit mr-2"></i>Edit Profile
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Content -->
+                <div id="tokens-tab" class="tab-content active">
+                    <!-- Token Balance -->
+                    <div class="glass-effect p-8 rounded-2xl mb-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Token Balance</h2>
+                                <p class="text-4xl font-bold text-purple-400"><span id="tokenBalance">0</span> tokens</p>
+                                <p class="text-sm text-purple-300 mt-2">Next reset in <span id="nextReset">7</span></p>
                             </div>
-                            <p class="text-gray-400 text-sm">Tokens reset weekly for free users</p>
-                            <div class="mt-4">
-                                <p class="text-sm text-purple-300">Next reset: <span id="nextReset">7 days</span></p>
+                            <div class="text-right">
+                                <span id="planStatus" class="px-4 py-2 rounded-full text-sm font-semibold bg-gray-700">Free</span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Subscription Status -->
-                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-xl font-semibold text-purple-300">Current Plan</h3>
-                                <span class="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm" id="planStatus">Free</span>
+                    <!-- Token Packages -->
+                    <div class="glass-effect p-8 rounded-2xl">
+                        <h2 class="text-2xl font-bold mb-6">
+                            <i class="fas fa-shopping-cart mr-2"></i>Get More Tokens
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="p-6 rounded-xl bg-purple-900 bg-opacity-50 text-center">
+                                <h3 class="text-xl font-bold mb-2">Starter Pack</h3>
+                                <p class="text-3xl font-bold text-purple-400 mb-4">10 Tokens</p>
+                                <p class="mb-4">Perfect for trying out Nightcore</p>
+                                <button class="w-full py-2 px-4 rounded-lg bg-purple-500 hover:bg-purple-600 transition-colors purchase-token-btn" data-amount="10" data-price="4.99">
+                                    $4.99
+                                </button>
                             </div>
-                            <p class="text-gray-400 text-sm">Free plan: 2 tokens per week</p>
-                            <button id="upgrade-btn" class="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full">
-                                Upgrade to Premium
-                            </button>
+                            <div class="p-6 rounded-xl bg-purple-900 bg-opacity-50 text-center transform scale-105 border-2 border-purple-500">
+                                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                    <span class="px-4 py-1 bg-purple-500 rounded-full text-sm">Best Value</span>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">Pro Pack</h3>
+                                <p class="text-3xl font-bold text-purple-400 mb-4">50 Tokens</p>
+                                <p class="mb-4">Most popular choice</p>
+                                <button class="w-full py-2 px-4 rounded-lg bg-purple-500 hover:bg-purple-600 transition-colors purchase-token-btn" data-amount="50" data-price="19.99">
+                                    $19.99
+                                </button>
+                            </div>
+                            <div class="p-6 rounded-xl bg-purple-900 bg-opacity-50 text-center">
+                                <h3 class="text-xl font-bold mb-2">Ultimate Pack</h3>
+                                <p class="text-3xl font-bold text-purple-400 mb-4">100 Tokens</p>
+                                <p class="mb-4">For power users</p>
+                                <button class="w-full py-2 px-4 rounded-lg bg-purple-500 hover:bg-purple-600 transition-colors purchase-token-btn" data-amount="100" data-price="34.99">
+                                    $34.99
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Purchase Tokens -->
-                <div class="glass-effect p-8 rounded-2xl">
-                    <h2 class="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                        <i class="fas fa-shopping-cart mr-2"></i>Get More Tokens
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Token Package 1 -->
-                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl hover:transform hover:scale-105 transition-transform">
-                            <h3 class="text-xl font-semibold text-purple-300 mb-2">Starter Pack</h3>
-                            <p class="text-3xl font-bold text-yellow-400 mb-4">5 Tokens</p>
-                            <p class="text-gray-400 mb-4">Perfect for casual users</p>
-                            <button class="purchase-token-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full" data-amount="5" data-price="0.50">
-                                $0.50
-                            </button>
+                <!-- Songs Tab -->
+                <div id="songs-tab" class="tab-content hidden">
+                    <div class="glass-effect p-8 rounded-2xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">
+                                <i class="fas fa-music mr-2"></i>My Nightcore Songs
+                            </h2>
+                            <span class="text-purple-400"><span id="songCount">0</span> songs created</span>
                         </div>
-
-                        <!-- Token Package 2 -->
-                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl hover:transform hover:scale-105 transition-transform">
-                            <h3 class="text-xl font-semibold text-purple-300 mb-2">Popular Pack</h3>
-                            <p class="text-3xl font-bold text-yellow-400 mb-4">15 Tokens</p>
-                            <p class="text-gray-400 mb-4">Best value for regular users</p>
-                            <button class="purchase-token-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full" data-amount="15" data-price="1.25">
-                                $1.25
-                            </button>
+                        <div id="songs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Songs will be populated here -->
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Token Package 3 -->
-                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl hover:transform hover:scale-105 transition-transform">
-                            <h3 class="text-xl font-semibold text-purple-300 mb-2">Premium Pack</h3>
-                            <p class="text-3xl font-bold text-yellow-400 mb-4">50 Tokens</p>
-                            <p class="text-gray-400 mb-4">Ideal for power users</p>
-                            <button class="purchase-token-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full" data-amount="50" data-price="3.50">
-                                $3.50
-                            </button>
+                <!-- Edit Profile Tab -->
+                <div id="profile-tab" class="tab-content hidden">
+                    <div class="glass-effect p-8 rounded-2xl">
+                        <h2 class="text-2xl font-bold mb-6">
+                            <i class="fas fa-user-edit mr-2"></i>Edit Profile
+                        </h2>
+                        <form id="profile-form" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Display Name</label>
+                                <input type="text" id="display-name" class="w-full px-4 py-2 rounded-lg bg-purple-900 bg-opacity-50 border border-purple-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Bio</label>
+                                <textarea id="bio" rows="4" class="w-full px-4 py-2 rounded-lg bg-purple-900 bg-opacity-50 border border-purple-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="px-6 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Profile Stats -->
+                        <div class="mt-12">
+                            <h3 class="text-xl font-bold mb-4">Profile Stats</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="p-6 rounded-xl bg-purple-900 bg-opacity-50 text-center">
+                                    <i class="fas fa-calendar-alt text-2xl text-purple-400 mb-2"></i>
+                                    <h4 class="font-bold mb-1">Member Since</h4>
+                                    <p id="member-since">December 2023</p>
+                                </div>
+                                <div class="p-6 rounded-xl bg-purple-900 bg-opacity-50 text-center">
+                                    <i class="fas fa-music text-2xl text-purple-400 mb-2"></i>
+                                    <h4 class="font-bold mb-1">Songs Created</h4>
+                                    <p id="total-songs">0 songs</p>
+                                </div>
+                                <div class="p-6 rounded-xl bg-purple-900 bg-opacity-50 text-center">
+                                    <i class="fas fa-award text-2xl text-purple-400 mb-2"></i>
+                                    <h4 class="font-bold mb-1">Awards</h4>
+                                    <div id="awards" class="flex justify-center space-x-2">
+                                        <!-- Awards will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,7 +205,7 @@
         <!-- Footer -->
         <footer class="py-6 px-8 border-t border-purple-800 glass-effect">
             <div class="text-center text-gray-400">
-                2024 Nightcore ✨ Transforming Music with Magic
+                <p>&copy; 2023 Nightcore. All rights reserved.</p>
             </div>
         </footer>
     </div>
