@@ -1,30 +1,76 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    if (!token) {
-        window.location.href = '/login.html';
-        return;
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    const auth = getAuth();
+    const db = getFirestore();
+    let currentUser = null;
+    let userData = null;
+
+    // Listen for auth state changes
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUser = user;
+            // Get or create user data in Firestore
+            const userDoc = doc(db, 'users', user.uid);
+            const userSnap = await getDoc(userDoc);
+            
+            if (userSnap.exists()) {
+                userData = userSnap.data();
+            } else {
+                // Initialize user data if it doesn't exist
+                userData = {
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    tokens: 5, // Starting tokens
+                    isPremium: false,
+                    joinDate: new Date().toISOString(),
+                    createdTracks: []
+                };
+                await setDoc(userDoc, userData);
+            }
+            
+            updateProfileInfo();
+        } else {
+            // Not logged in, redirect to login page
+            window.location.href = '/login.html';
+        }
+    });
 
     // Update profile information
     function updateProfileInfo() {
-        const profileName = document.querySelector('.profile-name');
+        if (!currentUser) return;
+
+        // Update profile picture if available
+        const profilePic = document.querySelector('img[alt="Profile Picture"]');
+        if (profilePic && currentUser.photoURL) {
+            profilePic.src = currentUser.photoURL;
+        }
+
+        // Update username
+        const profileName = document.querySelector('h1');
         if (profileName) {
-            profileName.textContent = user.name || 'Nightcore User';
+            profileName.textContent = userData.name;
+        }
+
+        // Update join date
+        const joinDate = document.querySelector('p.text-purple-300');
+        if (joinDate) {
+            const date = new Date(userData.joinDate);
+            const options = { year: 'numeric', month: 'long' };
+            joinDate.textContent = `Joined ${date.toLocaleDateString(undefined, options)}`;
         }
 
         // Update token balance
         const tokenBalance = document.getElementById('tokenBalance');
         if (tokenBalance) {
-            tokenBalance.textContent = user.tokens || '0';
+            tokenBalance.textContent = userData.tokens || '0';
         }
 
         // Update plan status
         const planStatus = document.getElementById('planStatus');
         if (planStatus) {
-            if (user.isPremium) {
+            if (userData.isPremium) {
                 planStatus.textContent = 'Premium';
                 planStatus.classList.add('bg-purple-500');
                 planStatus.classList.remove('bg-gray-700');
@@ -47,13 +93,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const purchaseButtons = document.querySelectorAll('.purchase-token-btn');
     purchaseButtons.forEach(button => {
         button.addEventListener('click', async () => {
-            const amount = button.dataset.amount;
+            if (!currentUser) return;
+
+            const amount = parseInt(button.dataset.amount);
             const price = button.dataset.price;
             
             try {
-                // For demo purposes, we'll just update the token count
-                user.tokens = (parseInt(user.tokens) || 0) + parseInt(amount);
-                localStorage.setItem('user', JSON.stringify(user));
+                // Update tokens in Firestore
+                const userDoc = doc(db, 'users', currentUser.uid);
+                userData.tokens = (userData.tokens || 0) + amount;
+                await setDoc(userDoc, userData);
+                
                 updateProfileInfo();
                 alert(`Successfully purchased ${amount} tokens!`);
             } catch (error) {
@@ -67,10 +117,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const upgradeButton = document.getElementById('upgrade-btn');
     if (upgradeButton) {
         upgradeButton.addEventListener('click', async () => {
+            if (!currentUser) return;
+
             try {
-                // For demo purposes, we'll just update the premium status
-                user.isPremium = true;
-                localStorage.setItem('user', JSON.stringify(user));
+                // Update premium status in Firestore
+                const userDoc = doc(db, 'users', currentUser.uid);
+                userData.isPremium = true;
+                await setDoc(userDoc, userData);
+                
                 updateProfileInfo();
                 alert('Successfully upgraded to Premium!');
             } catch (error) {
@@ -79,7 +133,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
-
-    // Initialize profile
-    updateProfileInfo();
 });
