@@ -120,5 +120,27 @@ function setupTabs() {
     })
 }
 
-// Initialize profile when page loads
-document.addEventListener('DOMContentLoaded', initializeProfile)
+// Update token balance display
+async function updateTokenBalance(userId) {
+    const tokenBalance = await tokens.getTokenBalance(userId)
+    document.getElementById('token-balance').textContent = tokenBalance
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await auth.getSession()
+    if (session?.user) {
+        // Check for token refresh
+        try {
+            await tokens.checkAndRefreshTokens()
+        } catch (error) {
+            console.error('Error checking tokens:', error)
+        }
+        
+        // Update token balance display
+        updateTokenBalance(session.user.id)
+        
+        // Initialize profile page
+        initializeProfile()
+    }
+})

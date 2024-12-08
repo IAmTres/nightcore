@@ -3,7 +3,14 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // Initialize Supabase client
 const supabaseUrl = 'https://zhqqvtjvzgwqikipbbjm.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpocXF2dGp2emd3cWlraXBiYmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk0MjgyNjEsImV4cCI6MjA0NTAwNDI2MX0.vPfPi3s_ht9xK0S901jkdmJBWTqtGoIU9aKeAUx7eZI'
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        storageKey: 'nightcore-auth-token',
+        storage: window.localStorage
+    }
+})
 
 // Auth functions
 export const auth = {
@@ -148,8 +155,17 @@ export const tokens = {
             .select('tokens')
             .eq('id', userId)
             .single()
+        
         if (error) throw error
         return data.tokens
+    },
+
+    // Check and refresh tokens (7-day refresh)
+    async checkAndRefreshTokens() {
+        const { error } = await supabase
+            .rpc('check_and_refresh_tokens')
+        
+        if (error) throw error
     },
 
     // Add tokens

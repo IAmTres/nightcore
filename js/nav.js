@@ -2,13 +2,21 @@ import { auth } from './supabase.js'
 
 // Initialize auth state
 async function initializeAuthState() {
-    const { data: { session } } = await auth.getSession()
-    updateUIForAuthState(session?.user)
-
-    // Listen for auth changes
-    auth.onAuthStateChange((event, session) => {
+    try {
+        const { data: { session } } = await auth.getSession()
         updateUIForAuthState(session?.user)
-    })
+
+        // Listen for auth changes
+        auth.onAuthStateChange((event, session) => {
+            updateUIForAuthState(session?.user)
+            // Check for token refresh on auth state change
+            if (session?.user) {
+                tokens.checkAndRefreshTokens().catch(console.error)
+            }
+        })
+    } catch (error) {
+        console.error('Error initializing auth state:', error)
+    }
 }
 
 // Update UI based on auth state
@@ -63,7 +71,8 @@ function setupProfileDropdown() {
 async function handleLogout() {
     try {
         await auth.signOut()
-        window.location.href = '/'
+        // Always refresh the page to update UI and token state
+        window.location.reload()
     } catch (error) {
         console.error('Error logging out:', error)
     }
