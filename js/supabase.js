@@ -5,6 +5,96 @@ const supabaseUrl = 'https://zhqqvtjvzgwqikipbbjm.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpocXF2dGp2emd3cWlraXBiYmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk0MjgyNjEsImV4cCI6MjA0NTAwNDI2MX0.vPfPi3s_ht9xK0S901jkdmJBWTqtGoIU9aKeAUx7eZI'
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Database functions
+export async function createUserProfile(userId, email) {
+    const { error } = await supabase
+        .from('user_profiles')
+        .insert([
+            {
+                id: userId,
+                email: email,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }
+        ])
+    
+    if (error) throw error
+}
+
+export async function createUserTokens(userId) {
+    const { error } = await supabase
+        .from('user_tokens')
+        .insert([
+            {
+                user_id: userId,
+                balance: 5, // Default 5 tokens for new users
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }
+        ])
+    
+    if (error) throw error
+}
+
+export async function getTokenBalance(userId) {
+    const { data, error } = await supabase
+        .from('user_tokens')
+        .select('balance')
+        .eq('user_id', userId)
+        .single()
+    
+    if (error) throw error
+    return data.balance
+}
+
+export async function deductToken(userId) {
+    const { error } = await supabase
+        .rpc('deduct_token', { user_id: userId })
+    
+    if (error) throw error
+}
+
+export async function saveSong(userId, title, nightcoreUrl) {
+    const { data, error } = await supabase
+        .from('songs')
+        .insert([
+            {
+                user_id: userId,
+                title: title,
+                nightcore_url: nightcoreUrl,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }
+        ])
+        .select()
+        .single()
+    
+    if (error) throw error
+    return data
+}
+
+// Auth state change handler
+supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+        try {
+            // Check if user profile exists
+            const { data: profile } = await supabase
+                .from('user_profiles')
+                .select()
+                .eq('id', session.user.id)
+                .single()
+
+            // If no profile exists, create one
+            if (!profile) {
+                await createUserProfile(session.user.id, session.user.email)
+                await createUserTokens(session.user.id)
+            }
+        } catch (error) {
+            console.error('Error setting up user:', error)
+        }
+    }
+})
+
 // Auth functions
 export const auth = {
     signIn: async ({ email, password }) => {

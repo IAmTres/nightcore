@@ -204,3 +204,117 @@ create policy "Users can upload their own avatar"
     bucket_id = 'avatars' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- Enable Row Level Security
+ALTER TABLE user_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE songs ENABLE ROW LEVEL SECURITY;
+
+-- Create user_tokens table
+CREATE TABLE IF NOT EXISTS user_tokens (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    balance INTEGER NOT NULL DEFAULT 5,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Create user_profiles table
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE,
+    username TEXT UNIQUE,
+    avatar_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Create songs table
+CREATE TABLE IF NOT EXISTS songs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    original_url TEXT,
+    nightcore_url TEXT NOT NULL,
+    likes INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Create function to deduct token
+CREATE OR REPLACE FUNCTION deduct_token(user_id UUID)
+RETURNS void AS $$
+BEGIN
+    UPDATE user_tokens
+    SET balance = balance - 1,
+        updated_at = TIMEZONE('utc'::text, NOW())
+    WHERE user_id = $1 AND balance > 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create function to add token
+CREATE OR REPLACE FUNCTION add_token(user_id UUID, amount INTEGER)
+RETURNS void AS $$
+BEGIN
+    UPDATE user_tokens
+    SET balance = balance + amount,
+        updated_at = TIMEZONE('utc'::text, NOW())
+    WHERE user_id = $1;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RLS Policies
+
+-- user_tokens policies
+CREATE POLICY "Users can view their own tokens"
+    ON user_tokens FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "System can update tokens"
+    ON user_tokens FOR UPDATE
+    USING (auth.uid() = user_id);
+
+-- user_profiles policies
+CREATE POLICY "Profiles are viewable by everyone"
+    ON user_profiles FOR SELECT
+    USING (true);
+
+CREATE POLICY "Users can update own profile"
+    ON user_profiles FOR UPDATE
+    USING (auth.uid() = id);
+
+-- songs policies
+CREATE POLICY "Songs are viewable by everyone"
+    ON songs FOR SELECT
+    USING (true);
+
+CREATE POLICY "Users can insert their own songs"
+    ON songs FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own songs"
+    ON songs FOR UPDATE
+    USING (auth.uid() = user_id);
+
+-- Triggers for updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::text, NOW());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_user_tokens_updated_at
+    BEFORE UPDATE ON user_tokens
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_profiles_updated_at
+    BEFORE UPDATE ON user_profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_songs_updated_at
+    BEFORE UPDATE ON songs
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

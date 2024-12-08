@@ -1,253 +1,283 @@
-import { auth, tokens } from './supabase.js'
-import { showLoginModal, showNotification } from './auth.js'
+import { supabase } from './supabase.js';
+import { showLoginModal, showNotification } from './auth.js';
 
-let selectedFile = null
-let isProcessing = false
+let selectedFile = null;
+let isProcessing = false;
 
 // Initialize the music generator
 async function initializeMusicGenerator() {
-    const uploadZone = document.getElementById('upload-zone')
-    const audioInput = document.getElementById('audio-input')
-    const generateButton = document.getElementById('generate-button')
-    const audioPlayer = document.getElementById('audio-player')
+    const uploadZone = document.getElementById('upload-zone');
+    const audioInput = document.getElementById('audio-input');
+    const generateButton = document.getElementById('generate-button');
+    const audioPlayer = document.getElementById('audio-player');
 
     if (uploadZone && audioInput) {
         // Handle click to upload
         uploadZone.addEventListener('click', () => {
-            audioInput.click()
-        })
+            audioInput.click();
+        });
 
         // Handle file selection
-        audioInput.addEventListener('change', handleFileUpload)
+        audioInput.addEventListener('change', handleFileUpload);
 
         // Handle drag and drop
         uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            uploadZone.classList.add('border-purple-500')
-        })
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.add('border-purple-500');
+        });
 
         uploadZone.addEventListener('dragleave', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            uploadZone.classList.remove('border-purple-500')
-        })
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('border-purple-500');
+        });
 
         uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            uploadZone.classList.remove('border-purple-500')
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('border-purple-500');
 
-            const file = e.dataTransfer.files[0]
+            const file = e.dataTransfer.files[0];
             if (file && file.type.startsWith('audio/')) {
-                handleFileSelection(file)
+                handleFileSelection(file);
             } else {
-                showNotification('Please upload an audio file (MP3 or WAV)', 'error')
+                showNotification('Please upload an audio file (MP3 or WAV)', 'error');
             }
-        })
+        });
     }
 
     if (generateButton) {
         generateButton.addEventListener('click', async () => {
-            if (isProcessing) return
-            
-            if (!selectedFile) {
-                showNotification('Please upload an audio file first', 'error')
-                return
+            const session = await supabase.auth.getSession();
+            if (!session.data.session) {
+                showLoginModal();
+                showNotification('Please log in to generate Nightcore versions', 'error');
+                return;
             }
 
-            const { data: { session } } = await auth.getSession()
-            if (!session) {
-                showLoginModal()
-                return
+            if (!selectedFile) {
+                showNotification('Please upload an audio file first', 'error');
+                return;
+            }
+
+            if (isProcessing) {
+                showNotification('Already processing a file', 'error');
+                return;
             }
 
             try {
-                isProcessing = true
-                generateButton.disabled = true
-                generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...'
-
-                // Check token balance
-                const { data: { balance } } = await tokens.getTokenBalance(session.user.id)
-                if (balance < 1) {
-                    showNotification('You need tokens to generate a Nightcore version. Please visit your profile to get more tokens.', 'error')
-                    return
-                }
-
-                // Generate nightcore version
-                await generateNightcore()
-                
-                // Use token
-                await tokens.useToken(session.user.id)
-                
-                showNotification('Nightcore version generated successfully!', 'success')
+                await generateNightcore();
             } catch (error) {
-                console.error('Error:', error)
-                showNotification('Failed to generate Nightcore version. Please try again.', 'error')
-            } finally {
-                isProcessing = false
-                generateButton.disabled = false
-                generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate Nightcore Version'
+                console.error('Error generating nightcore:', error);
+                showNotification('Error generating nightcore version', 'error');
             }
-        })
+        });
     }
 }
 
 // Handle file upload from input
-async function handleFileUpload(event) {
-    const file = event.target.files[0]
-    if (file) {
-        handleFileSelection(file)
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('audio/')) {
+        handleFileSelection(file);
+    } else {
+        showNotification('Please upload an audio file (MP3 or WAV)', 'error');
     }
 }
 
 // Handle file selection (both upload and drop)
-async function handleFileSelection(file) {
+function handleFileSelection(file) {
+    // Check file type
     if (!file.type.startsWith('audio/')) {
-        showNotification('Please upload an audio file (MP3 or WAV)', 'error')
-        return
+        showNotification('Please upload an audio file (MP3 or WAV)', 'error');
+        return;
     }
 
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        showNotification('File size must be less than 10MB', 'error')
-        return
+    // Check file size (max 20MB)
+    const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+    if (file.size > maxSize) {
+        showNotification('File size must be less than 20MB', 'error');
+        return;
     }
 
-    selectedFile = file
-    
-    // Show file name in upload zone
-    const uploadZone = document.getElementById('upload-zone')
+    selectedFile = file;
+    const uploadZone = document.getElementById('upload-zone');
+    const generateButton = document.getElementById('generate-button');
+    const audioPlayer = document.getElementById('audio-player');
+
     if (uploadZone) {
+        // Update upload zone UI
         uploadZone.innerHTML = `
-            <i class="fas fa-music text-4xl mb-4 text-purple-500"></i>
-            <p class="text-lg mb-2">${file.name}</p>
-            <p class="text-sm text-gray-500">Click to change file</p>
-        `
+            <div class="text-center">
+                <i class="fas fa-music text-purple-400 text-2xl mb-2"></i>
+                <div class="text-purple-400 mb-2 font-semibold">${file.name}</div>
+                <div class="text-sm text-gray-400">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
+            </div>
+        `;
+        uploadZone.classList.add('border-purple-500');
     }
 
-    // Enable generate button
-    const generateButton = document.getElementById('generate-button')
     if (generateButton) {
-        generateButton.classList.remove('opacity-50', 'cursor-not-allowed')
-        generateButton.disabled = false
+        generateButton.disabled = false;
+        generateButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    // Preview the uploaded audio
+    if (audioPlayer) {
+        const url = URL.createObjectURL(file);
+        audioPlayer.src = url;
+        audioPlayer.classList.remove('hidden');
     }
 }
 
 // Generate Nightcore version
 async function generateNightcore() {
-    if (!selectedFile) return
+    if (!selectedFile || isProcessing) return;
+
+    isProcessing = true;
+    const generateButton = document.getElementById('generate-button');
+    const progressBar = document.getElementById('progress-bar');
+    const originalButtonText = generateButton.textContent;
+    
+    generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+    generateButton.disabled = true;
 
     try {
-        // Create audio context
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        // Check token balance
+        const session = await supabase.auth.getSession();
+        const userId = session.data.session.user.id;
         
-        // Read file
-        const arrayBuffer = await selectedFile.arrayBuffer()
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+        const { data: tokenData, error: tokenError } = await supabase
+            .from('user_tokens')
+            .select('balance')
+            .eq('user_id', userId)
+            .single();
+
+        if (tokenError) throw tokenError;
+        if (!tokenData || tokenData.balance < 1) {
+            throw new Error('Insufficient tokens. Please purchase more tokens to continue.');
+        }
+
+        // Create AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await selectedFile.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
         // Create offline context for processing
         const offlineContext = new OfflineAudioContext(
             audioBuffer.numberOfChannels,
-            Math.ceil(audioBuffer.length * 1.3),
+            audioBuffer.length,
             audioBuffer.sampleRate
-        )
+        );
 
-        // Create source and nodes
-        const source = offlineContext.createBufferSource()
-        source.buffer = audioBuffer
-        source.playbackRate.value = 1.3 // Nightcore speed
+        // Create source and connect to offline context
+        const source = offlineContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.playbackRate.value = 1.25; // Speed up by 25%
 
-        const compressor = offlineContext.createDynamicsCompressor()
-        compressor.threshold.value = -20
-        compressor.knee.value = 40
-        compressor.ratio.value = 12
-        compressor.attack.value = 0
-        compressor.release.value = 0.25
+        // Add some effects
+        const highShelf = offlineContext.createBiquadFilter();
+        highShelf.type = 'highshelf';
+        highShelf.frequency.value = 4000;
+        highShelf.gain.value = 6;
 
-        const gainNode = offlineContext.createGain()
-        gainNode.gain.value = 1.2 // Slight volume boost
+        // Connect the nodes
+        source.connect(highShelf);
+        highShelf.connect(offlineContext.destination);
+        source.start();
 
-        // Connect nodes
-        source.connect(compressor)
-        compressor.connect(gainNode)
-        gainNode.connect(offlineContext.destination)
+        // Render audio
+        const renderedBuffer = await offlineContext.startRendering();
 
-        // Start rendering
-        source.start(0)
-        const renderedBuffer = await offlineContext.startRendering()
-
-        // Create blob URL
-        const blob = new Blob([await audioBufferToWav(renderedBuffer)], { type: 'audio/wav' })
-        const url = URL.createObjectURL(blob)
-
+        // Convert to WAV and create download
+        const wavBlob = await audioBufferToWav(renderedBuffer);
+        const url = URL.createObjectURL(wavBlob);
+        
         // Update audio player
-        const audioPlayer = document.getElementById('audio-player')
+        const audioPlayer = document.getElementById('audio-player');
         if (audioPlayer) {
-            audioPlayer.src = url
-            audioPlayer.classList.remove('hidden')
+            audioPlayer.src = url;
+            audioPlayer.classList.remove('hidden');
         }
 
+        // Create download button
+        const downloadButton = document.createElement('a');
+        downloadButton.href = url;
+        downloadButton.download = 'nightcore_' + selectedFile.name.replace(/\.[^/.]+$/, '.wav');
+        downloadButton.click();
+
+        // Deduct token
+        const { error: updateError } = await supabase.rpc('deduct_token', { user_id: userId });
+        if (updateError) throw updateError;
+
+        showNotification('Nightcore version generated successfully!', 'success');
     } catch (error) {
-        console.error('Error generating Nightcore:', error)
-        throw error
+        console.error('Error:', error);
+        showNotification(error.message || 'Error generating nightcore version', 'error');
+    } finally {
+        isProcessing = false;
+        if (generateButton) {
+            generateButton.innerHTML = originalButtonText;
+            generateButton.disabled = false;
+        }
     }
 }
 
 // Convert AudioBuffer to WAV format
-async function audioBufferToWav(buffer) {
-    const numberOfChannels = buffer.numberOfChannels
-    const length = buffer.length
-    const sampleRate = buffer.sampleRate
-    const bitsPerSample = 16
-    const bytesPerSample = bitsPerSample / 8
-    const blockAlign = numberOfChannels * bytesPerSample
-    const byteRate = sampleRate * blockAlign
-    const dataSize = length * blockAlign
+function audioBufferToWav(buffer) {
+    const numberOfChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
 
-    const arrayBuffer = new ArrayBuffer(44 + dataSize)
-    const view = new DataView(arrayBuffer)
+    let result = new Float32Array(buffer.length * numberOfChannels);
+    let offset = 0;
+    for (let channel = 0; channel < numberOfChannels; channel++) {
+        let channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < channelData.length; i++) {
+            result[offset++] = channelData[i];
+        }
+    }
+
+    const dataSize = result.length * (bitDepth / 8);
+    const buffer_ = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer_);
 
     // Write WAV header
-    const writeString = (offset, string) => {
-        for (let i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i))
-        }
-    }
-
-    writeString(0, 'RIFF')                                    // RIFF identifier
-    view.setUint32(4, 36 + dataSize, true)                   // File length
-    writeString(8, 'WAVE')                                    // WAVE identifier
-    writeString(12, 'fmt ')                                   // Format chunk identifier
-    view.setUint32(16, 16, true)                             // Format chunk length
-    view.setUint16(20, 1, true)                              // Sample format (1 = PCM)
-    view.setUint16(22, numberOfChannels, true)               // Number of channels
-    view.setUint32(24, sampleRate, true)                     // Sample rate
-    view.setUint32(28, byteRate, true)                       // Byte rate
-    view.setUint16(32, blockAlign, true)                     // Block align
-    view.setUint16(34, bitsPerSample, true)                  // Bits per sample
-    writeString(36, 'data')                                   // Data chunk identifier
-    view.setUint32(40, dataSize, true)                       // Data chunk length
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numberOfChannels * (bitDepth / 8), true);
+    view.setUint16(32, numberOfChannels * (bitDepth / 8), true);
+    view.setUint16(34, bitDepth, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
 
     // Write audio data
-    const channels = []
-    for (let i = 0; i < numberOfChannels; i++) {
-        channels.push(buffer.getChannelData(i))
+    const volume = 0.8;
+    let index = 44;
+    for (let i = 0; i < result.length; i++) {
+        const sample = Math.max(-1, Math.min(1, result[i])) * volume;
+        view.setInt16(index, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        index += 2;
     }
 
-    let offset = 44
-    for (let i = 0; i < length; i++) {
-        for (let channel = 0; channel < numberOfChannels; channel++) {
-            const sample = Math.max(-1, Math.min(1, channels[channel][i]))
-            const int = sample < 0 ? sample * 0x8000 : sample * 0x7FFF
-            view.setInt16(offset, int, true)
-            offset += 2
-        }
-    }
+    return new Blob([buffer_], { type: 'audio/wav' });
+}
 
-    return arrayBuffer
+function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+    }
 }
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initializeMusicGenerator()
-})
+    initializeMusicGenerator();
+});

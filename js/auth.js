@@ -1,30 +1,94 @@
 import { supabase } from './supabase.js';
 
-// Modal functions
-function toggleModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal.classList.contains('hidden')) {
+// Show/hide modal functions
+export function showLoginModal() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
-    } else {
+    }
+}
+
+export function showSignupModal() {
+    const modal = document.getElementById('signupModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+export function hideLoginModal() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = 'auto';
     }
 }
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
+export function hideSignupModal() {
+    const modal = document.getElementById('signupModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Show notification
+export function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`;
+    notification.style.animation = 'slideIn 0.3s ease-out forwards';
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Update auth UI
+function updateAuthUI(isAuthenticated) {
+    const authHideElements = document.querySelectorAll('#loginBtn, #signupBtn');
+    const authShowElements = document.querySelectorAll('#profileBtn, #logoutBtn');
+    
+    if (isAuthenticated) {
+        authHideElements.forEach(el => el.classList.add('hidden'));
+        authShowElements.forEach(el => el.classList.remove('hidden'));
+    } else {
+        authHideElements.forEach(el => el.classList.remove('hidden'));
+        authShowElements.forEach(el => el.classList.add('hidden'));
+    }
+}
+
+// Initialize auth UI
+export function initializeAuth() {
     const loginBtn = document.getElementById('loginBtn');
     const signupBtn = document.getElementById('signupBtn');
-    const profileBtn = document.getElementById('profileBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
 
-    loginBtn?.addEventListener('click', () => toggleModal('loginModal'));
-    signupBtn?.addEventListener('click', () => toggleModal('signupModal'));
+    // Setup modal triggers
+    loginBtn?.addEventListener('click', showLoginModal);
+    signupBtn?.addEventListener('click', showSignupModal);
+
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                hideLoginModal();
+                hideSignupModal();
+            }
+        });
+    });
 
     loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -39,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (error) throw error;
 
-            toggleModal('loginModal');
+            hideLoginModal();
             showNotification('Successfully logged in!', 'success');
             updateAuthUI(true);
         } catch (error) {
@@ -60,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (error) throw error;
 
-            toggleModal('signupModal');
+            hideSignupModal();
             showNotification('Successfully signed up! Please check your email for verification.', 'success');
         } catch (error) {
             showNotification(error.message, 'error');
@@ -78,51 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification(error.message, 'error');
         }
     });
-});
 
-// Update UI based on auth state
-function updateAuthUI(isAuthenticated) {
-    const authHideElements = document.querySelectorAll('#loginBtn, #signupBtn');
-    const authShowElements = document.querySelectorAll('#profileBtn, #logoutBtn');
-    
-    if (isAuthenticated) {
-        authHideElements.forEach(el => el.classList.add('hidden'));
-        authShowElements.forEach(el => el.classList.remove('hidden'));
-    } else {
-        authHideElements.forEach(el => el.classList.remove('hidden'));
-        authShowElements.forEach(el => el.classList.add('hidden'));
-    }
-}
-
-// Notification system
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
-        type === 'error' ? 'bg-red-500' : 'bg-green-500'
-    }`;
-    notification.style.animation = 'slideIn 0.3s ease-out forwards';
-    notification.textContent = message;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out forwards';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-// Initialize auth state
-supabase.auth.onAuthStateChange((event, session) => {
-    updateAuthUI(!!session);
-});
-
-// Export initialization function
-export function initializeAuth() {
-    // Initial auth state check
+    // Check initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
+        updateAuthUI(!!session);
+    });
+
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange((event, session) => {
         updateAuthUI(!!session);
     });
 }
 
-// Initialize auth UI on page load
-document.addEventListener('DOMContentLoaded', initializeAuth)
+document.addEventListener('DOMContentLoaded', initializeAuth);

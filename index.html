@@ -52,97 +52,91 @@
     }
     </script>
 </head>
-<body class="bg-black text-white">
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <nav class="flex justify-between items-center p-4 bg-opacity-50 backdrop-blur-md fixed w-full top-0 z-50">
-            <div class="flex items-center space-x-4">
-                <a href="/" class="nav-link text-white text-xl font-bold">Nightcore Generator</a>
-                <a href="/about.html" class="nav-link text-white">About</a>
+<body class="bg-gradient-to-br from-purple-900 to-black min-h-screen text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-opacity-90 bg-black backdrop-blur-md z-50 px-6 py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <a href="/" class="flex items-center space-x-2">
+                    <img src="images/logonightcore.png" alt="Nightcore Logo" class="h-8 w-8">
+                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">Nightcore</span>
+                </a>
+                <a href="/about.html" class="nav-link">About</a>
             </div>
             <div class="flex items-center space-x-4">
-                <button id="loginBtn" class="nav-link text-white">Login</button>
-                <button id="signupBtn" class="nav-link text-white">Sign Up</button>
-                <button id="profileBtn" class="nav-link text-white hidden">Profile</button>
-                <button id="logoutBtn" class="nav-link text-white hidden">Logout</button>
-            </div>
-        </nav>
-
-        <!-- Login Modal -->
-        <div id="loginModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-            <div class="modal-content rounded-lg p-8 max-w-md w-full mx-4">
-                <h2 class="text-2xl font-bold mb-6 text-white text-center">Login</h2>
-                <form id="loginForm" class="space-y-4">
-                    <input type="email" id="loginEmail" placeholder="Email" required class="form-input w-full">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="form-input w-full">
-                    <button type="submit" class="form-button w-full">Login</button>
-                </form>
-                <button class="absolute top-4 right-4 text-white hover:text-gray-300" onclick="toggleModal('loginModal')">✕</button>
+                <button id="loginBtn" class="nav-link">Login</button>
+                <button id="signupBtn" class="nav-link">Sign Up</button>
+                <button id="profileBtn" class="nav-link hidden">Profile</button>
+                <button id="logoutBtn" class="nav-link hidden">Logout</button>
             </div>
         </div>
+    </nav>
 
-        <!-- Signup Modal -->
-        <div id="signupModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-            <div class="modal-content rounded-lg p-8 max-w-md w-full mx-4">
-                <h2 class="text-2xl font-bold mb-6 text-white text-center">Sign Up</h2>
-                <form id="signupForm" class="space-y-4">
-                    <input type="email" id="signupEmail" placeholder="Email" required class="form-input w-full">
-                    <input type="password" id="signupPassword" placeholder="Password" required class="form-input w-full">
-                    <button type="submit" class="form-button w-full">Sign Up</button>
-                </form>
-                <button class="absolute top-4 right-4 text-white hover:text-gray-300" onclick="toggleModal('signupModal')">✕</button>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <main class="flex-grow container mx-auto px-8 py-12">
-            <div class="text-center mb-16">
-                <h1 class="text-5xl font-bold mb-4 animate-pulse">
-                    Transform Your Music into
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                        Nightcore Magic
-                    </span>
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 pt-24 pb-12">
+        <div class="max-w-4xl mx-auto">
+            <!-- Hero Section -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                    Create Amazing Nightcore Music
                 </h1>
-                <p class="text-xl text-gray-400 max-w-2xl mx-auto">
-                    Experience the future of music transformation with our AI-powered Nightcore generator.
-                    Upload your track and watch it transform into an energetic masterpiece.
+                <p class="text-lg text-gray-300 mb-8">
+                    Transform your favorite songs into high-energy Nightcore versions with our AI-powered generator
                 </p>
             </div>
 
-            <!-- Upload Section -->
-            <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
-                <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
-                <p class="text-lg mb-2">Drop your audio file here or click to upload</p>
-                <p class="text-sm text-gray-500">Supported formats: MP3, WAV (Max 10MB)</p>
-                <input type="file" id="audio-input" class="hidden" accept="audio/*">
-            </div>
+            <!-- Generator Section -->
+            <div class="bg-purple-900 bg-opacity-20 rounded-xl p-8 backdrop-blur-sm border border-purple-500/30">
+                <!-- Upload Zone -->
+                <div id="upload-zone" class="border-2 border-dashed border-purple-500/50 rounded-lg p-8 text-center cursor-pointer hover:border-purple-400 transition-colors mb-6">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-purple-400 mb-4"></i>
+                    <p class="text-lg mb-2">Drag and drop your audio file here</p>
+                    <p class="text-sm text-gray-400">or click to browse</p>
+                    <input type="file" id="audio-input" accept="audio/*" class="hidden">
+                </div>
 
-            <!-- Generate Button -->
-            <div class="text-center mt-8">
-                <button id="generate-button" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors opacity-50 cursor-not-allowed" disabled>
-                    <i class="fas fa-magic mr-2"></i>Generate Nightcore Version
-                </button>
+                <!-- Controls -->
+                <div class="flex flex-col space-y-4">
+                    <audio id="audio-player" controls class="w-full hidden"></audio>
+                    <button id="generate-button" class="form-button opacity-50 cursor-not-allowed" disabled>
+                        <i class="fas fa-magic mr-2"></i>Generate Nightcore Version
+                    </button>
+                </div>
             </div>
+        </div>
+    </main>
 
-            <!-- Audio Player -->
-            <div class="mt-8">
-                <audio id="audio-player" class="w-full hidden" controls></audio>
-            </div>
-
-        </main>
-
-        <!-- Footer -->
-        <footer class="py-6 px-8 border-t border-purple-800">
-            <div class="text-center text-gray-400">
-                2024 Nightcore. All rights reserved.
-            </div>
-        </footer>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-content rounded-lg p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+            <form id="loginForm" class="space-y-4">
+                <input type="email" id="loginEmail" placeholder="Email" required class="form-input">
+                <input type="password" id="loginPassword" placeholder="Password" required class="form-input">
+                <button type="submit" class="form-button w-full">Login</button>
+            </form>
+            <button class="absolute top-4 right-4 text-white hover:text-gray-300" onclick="document.getElementById('loginModal').classList.add('hidden')">✕</button>
+        </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-content rounded-lg p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+            <form id="signupForm" class="space-y-4">
+                <input type="email" id="signupEmail" placeholder="Email" required class="form-input">
+                <input type="password" id="signupPassword" placeholder="Password" required class="form-input">
+                <button type="submit" class="form-button w-full">Sign Up</button>
+            </form>
+            <button class="absolute top-4 right-4 text-white hover:text-gray-300" onclick="document.getElementById('signupModal').classList.add('hidden')">✕</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/+esm"></script>
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/nav.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
