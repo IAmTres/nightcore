@@ -172,69 +172,23 @@
             </div>
 
             <!-- Upload Section -->
-            <div class="space-y-8">
-                <!-- File Upload Zone -->
-                <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
-                    <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
-                    <p class="text-lg mb-2">Drop your audio file here or click to upload</p>
-                    <p class="text-sm text-gray-500">Supported formats: MP3, WAV (Max 10MB)</p>
-                    <input type="file" id="audio-input" class="hidden" accept="audio/*">
-                </div>
-
-                <!-- OR Divider -->
-                <div class="flex items-center justify-center">
-                    <div class="border-t border-purple-800 flex-grow"></div>
-                    <span class="px-4 text-gray-400">OR</span>
-                    <div class="border-t border-purple-800 flex-grow"></div>
-                </div>
-
-                <!-- Link Input -->
-                <div class="flex flex-col items-center space-y-4">
-                    <div class="w-full max-w-md">
-                        <label for="song-link" class="block text-sm font-medium text-gray-400 mb-2">Enter a YouTube or SoundCloud link</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="song-link" 
-                                class="flex-grow px-4 py-2 rounded-lg bg-purple-900/50 border border-purple-800 focus:outline-none focus:border-purple-500 transition-colors"
-                                placeholder="https://www.youtube.com/watch?v=...">
-                            <button id="fetch-link-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
-                                <i class="fas fa-link"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
+                <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
+                <p class="text-lg mb-2">Drop your audio file here or click to upload</p>
+                <p class="text-sm text-gray-500">Supported formats: MP3, WAV (Max 10MB)</p>
+                <input type="file" id="audio-input" class="hidden" accept="audio/*">
             </div>
 
             <!-- Generate Button -->
             <div class="text-center mt-8">
-                <button id="generate-button" class="px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                <button id="generate-button" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors opacity-50 cursor-not-allowed" disabled>
                     <i class="fas fa-magic mr-2"></i>Generate Nightcore Version
                 </button>
-                <p class="text-sm text-gray-500 mt-2">Requires 1 token per generation</p>
             </div>
 
             <!-- Audio Player -->
-            <div id="audio-player" class="mt-8 hidden">
-                <div class="flex flex-col items-center space-y-4">
-                    <!-- Progress Bar -->
-                    <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-                        <div id="progress-bar" class="h-full w-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-100"></div>
-                    </div>
-                    <div class="w-full flex justify-between text-sm text-gray-400">
-                        <span id="current-time">0:00</span>
-                        <span id="total-time">0:00</span>
-                    </div>
-                    
-                    <!-- Controls -->
-                    <div class="flex items-center space-x-4 justify-center w-full bg-black/50 p-4 rounded-lg mb-4">
-                        <button id="play-btn" class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center hover:bg-purple-600 transition-colors">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button id="download-btn" class="hidden px-6 py-3 bg-green-500 rounded-full hover:bg-green-600 transition-colors flex items-center">
-                            <i class="fas fa-download mr-2"></i>
-                            <span>Download Nightcore Version</span>
-                        </button>
-                    </div>
-                </div>
+            <div class="mt-8">
+                <audio id="audio-player" class="w-full hidden" controls></audio>
             </div>
 
         </main>
