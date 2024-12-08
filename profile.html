@@ -7,6 +7,9 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/profile.js"></script>
 </head>
 <body>
     <div class="min-h-screen flex flex-col content-overlay">
@@ -19,12 +22,27 @@
             <nav class="space-x-6">
                 <a href="/" class="hover:text-purple-400 transition-colors">Home</a>
                 <a href="/about.html" class="hover:text-purple-400 transition-colors">About</a>
-                <div class="relative inline-block">
-                    <button class="flex items-center space-x-2 text-purple-400">
+                <div class="relative inline-block" id="profile-dropdown">
+                    <button class="flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors" id="profile-menu-button">
                         <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=nightcore" alt="Avatar" class="w-8 h-8 rounded-full">
                         <span>Profile</span>
-                        <i class="fas fa-chevron-down"></i>
+                        <i class="fas fa-chevron-down transition-transform duration-200"></i>
                     </button>
+                    <!-- Dropdown menu -->
+                    <div class="absolute right-0 mt-2 w-48 bg-purple-900 bg-opacity-90 backdrop-blur-md rounded-xl shadow-lg py-1 hidden" id="profile-menu">
+                        <a href="/profile.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors">
+                            <i class="fas fa-user mr-2"></i>My Profile
+                        </a>
+                        <a href="/login.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors" id="login-link">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        <a href="/signup.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors" id="signup-link">
+                            <i class="fas fa-user-plus mr-2"></i>Sign Up
+                        </a>
+                        <button class="hidden w-full text-left px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors" id="logout-button">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
                 </div>
             </nav>
         </header>
@@ -42,52 +60,75 @@
                             </h1>
                             <p class="text-purple-300">Joined December 2023</p>
                         </div>
-                        <button class="btn-secondary ml-auto">Edit Profile</button>
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="profile-stat">
-                        <span class="text-purple-300">Tracks Created</span>
-                        <span class="text-2xl font-bold text-purple-400">42</span>
-                    </div>
-                    <div class="profile-stat">
-                        <span class="text-purple-300">Total Plays</span>
-                        <span class="text-2xl font-bold text-purple-400">1.2K</span>
-                    </div>
-                    <div class="profile-stat">
-                        <span class="text-purple-300">Favorites</span>
-                        <span class="text-2xl font-bold text-purple-400">128</span>
+                <!-- Token System -->
+                <div class="glass-effect p-8 rounded-2xl mb-8">
+                    <h2 class="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                        <i class="fas fa-coins mr-2"></i>Your Tokens
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Token Balance -->
+                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-semibold text-purple-300">Available Tokens</h3>
+                                <span class="text-3xl font-bold text-yellow-400" id="tokenBalance">2</span>
+                            </div>
+                            <p class="text-gray-400 text-sm">Tokens reset weekly for free users</p>
+                            <div class="mt-4">
+                                <p class="text-sm text-purple-300">Next reset: <span id="nextReset">7 days</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Subscription Status -->
+                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-semibold text-purple-300">Current Plan</h3>
+                                <span class="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm" id="planStatus">Free</span>
+                            </div>
+                            <p class="text-gray-400 text-sm">Free plan: 2 tokens per week</p>
+                            <button id="upgrade-btn" class="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full">
+                                Upgrade to Premium
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
+                <!-- Purchase Tokens -->
                 <div class="glass-effect p-8 rounded-2xl">
                     <h2 class="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                        Recent Activity
+                        <i class="fas fa-shopping-cart mr-2"></i>Get More Tokens
                     </h2>
-                    <div class="space-y-4">
-                        <div class="flex items-center space-x-4 p-4 glass-effect rounded-xl">
-                            <i class="fas fa-music text-2xl text-purple-400"></i>
-                            <div>
-                                <h3 class="font-bold">Created "Running in the 90s - Nightcore Remix"</h3>
-                                <p class="text-sm text-purple-300">2 hours ago</p>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Token Package 1 -->
+                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl hover:transform hover:scale-105 transition-transform">
+                            <h3 class="text-xl font-semibold text-purple-300 mb-2">Starter Pack</h3>
+                            <p class="text-3xl font-bold text-yellow-400 mb-4">5 Tokens</p>
+                            <p class="text-gray-400 mb-4">Perfect for casual users</p>
+                            <button class="purchase-token-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full" data-amount="5" data-price="0.50">
+                                $0.50
+                            </button>
                         </div>
-                        <div class="flex items-center space-x-4 p-4 glass-effect rounded-xl">
-                            <i class="fas fa-heart text-2xl text-purple-400"></i>
-                            <div>
-                                <h3 class="font-bold">Liked "Everytime We Touch - Nightcore Version"</h3>
-                                <p class="text-sm text-purple-300">Yesterday</p>
-                            </div>
+
+                        <!-- Token Package 2 -->
+                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl hover:transform hover:scale-105 transition-transform">
+                            <h3 class="text-xl font-semibold text-purple-300 mb-2">Popular Pack</h3>
+                            <p class="text-3xl font-bold text-yellow-400 mb-4">15 Tokens</p>
+                            <p class="text-gray-400 mb-4">Best value for regular users</p>
+                            <button class="purchase-token-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full" data-amount="15" data-price="1.25">
+                                $1.25
+                            </button>
                         </div>
-                        <div class="flex items-center space-x-4 p-4 glass-effect rounded-xl">
-                            <i class="fas fa-comment text-2xl text-purple-400"></i>
-                            <div>
-                                <h3 class="font-bold">Commented on "Dragostea Din Tei Remix"</h3>
-                                <p class="text-sm text-purple-300">2 days ago</p>
-                            </div>
+
+                        <!-- Token Package 3 -->
+                        <div class="bg-purple-900 bg-opacity-50 p-6 rounded-xl hover:transform hover:scale-105 transition-transform">
+                            <h3 class="text-xl font-semibold text-purple-300 mb-2">Premium Pack</h3>
+                            <p class="text-3xl font-bold text-yellow-400 mb-4">50 Tokens</p>
+                            <p class="text-gray-400 mb-4">Ideal for power users</p>
+                            <button class="purchase-token-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity w-full" data-amount="50" data-price="3.50">
+                                $3.50
+                            </button>
                         </div>
                     </div>
                 </div>

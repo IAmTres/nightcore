@@ -7,6 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="js/nav.js"></script>
+    <script src="js/auth.js"></script>
 </head>
 <body>
     <div class="min-h-screen flex flex-col content-overlay">
@@ -19,8 +21,27 @@
             <nav class="space-x-6">
                 <a href="/" class="hover:text-purple-400 transition-colors">Home</a>
                 <a href="/about.html" class="hover:text-purple-400 transition-colors">About</a>
-                <a href="/gallery.html" class="hover:text-purple-400 transition-colors">Gallery</a>
-                <a href="/login.html" class="text-purple-400">Login</a>
+                <div class="relative inline-block" id="profile-dropdown">
+                    <button class="flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors" id="profile-menu-button">
+                        <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=nightcore" alt="Avatar" class="w-8 h-8 rounded-full">
+                        <span>Profile</span>
+                        <i class="fas fa-chevron-down transition-transform duration-200"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-purple-900 bg-opacity-90 backdrop-blur-md rounded-xl shadow-lg py-1 hidden" id="profile-menu">
+                        <a href="/profile.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors">
+                            <i class="fas fa-user mr-2"></i>My Profile
+                        </a>
+                        <a href="/login.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors" id="login-link">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        <a href="/signup.html" class="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors" id="signup-link">
+                            <i class="fas fa-user-plus mr-2"></i>Sign Up
+                        </a>
+                        <button class="hidden w-full text-left px-4 py-2 text-sm text-purple-200 hover:bg-purple-800 transition-colors" id="logout-button">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
+                </div>
             </nav>
         </header>
 
@@ -32,50 +53,35 @@
                         Welcome Back! 
                     </h1>
 
+                    <!-- Error Message -->
+                    <div id="error-message" class="hidden bg-red-500 bg-opacity-20 text-red-300 p-4 rounded-lg mb-6">
+                    </div>
+
                     <!-- Login Form -->
-                    <form class="space-y-6">
+                    <form id="login-form" class="space-y-6">
                         <div>
-                            <label class="block text-purple-300 mb-2">Email</label>
-                            <input type="email" class="form-input w-full" placeholder="your@email.com" required>
+                            <label for="email" class="block text-purple-300 mb-2">Email</label>
+                            <input type="email" id="email" class="form-input w-full bg-purple-900 bg-opacity-50 border-purple-700 focus:border-purple-500 rounded-lg" placeholder="your@email.com" required>
                         </div>
                         <div>
-                            <label class="block text-purple-300 mb-2">Password</label>
-                            <input type="password" class="form-input w-full" placeholder="••••••••" required>
+                            <label for="password" class="block text-purple-300 mb-2">Password</label>
+                            <input type="password" id="password" class="form-input w-full bg-purple-900 bg-opacity-50 border-purple-700 focus:border-purple-500 rounded-lg" placeholder="••••••••" required>
                         </div>
                         <div class="flex items-center justify-between">
                             <label class="flex items-center">
-                                <input type="checkbox" class="form-checkbox text-purple-500">
+                                <input type="checkbox" class="form-checkbox bg-purple-900 border-purple-700">
                                 <span class="ml-2 text-sm text-purple-300">Remember me</span>
                             </label>
                             <a href="#" class="text-sm text-purple-400 hover:text-purple-300">Forgot password?</a>
                         </div>
-                        <button type="submit" class="btn-primary w-full">Login</button>
-                        <div class="text-center text-purple-300">
-                            Don't have an account? 
-                            <a href="/signup.html" class="text-purple-400 hover:text-purple-300">Sign up</a>
+                        <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+                            Login
+                        </button>
+                        <div class="text-center mt-4">
+                            <span class="text-purple-300">Don't have an account?</span>
+                            <a href="/signup.html" class="text-purple-400 hover:text-purple-300 ml-1">Sign up</a>
                         </div>
                     </form>
-
-                    <!-- Social Login -->
-                    <div class="mt-8">
-                        <div class="relative">
-                            <div class="absolute inset-0 flex items-center">
-                                <div class="w-full border-t border-purple-800"></div>
-                            </div>
-                            <div class="relative flex justify-center text-sm">
-                                <span class="px-2 bg-black/30 text-purple-300">Or continue with</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 grid grid-cols-2 gap-4">
-                            <button class="btn-secondary flex items-center justify-center">
-                                <i class="fab fa-google mr-2"></i> Google
-                            </button>
-                            <button class="btn-secondary flex items-center justify-center">
-                                <i class="fab fa-discord mr-2"></i> Discord
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </main>
@@ -83,7 +89,7 @@
         <!-- Footer -->
         <footer class="py-6 px-8 border-t border-purple-800 glass-effect">
             <div class="text-center text-gray-400">
-                2024 NightcoreAI  Transforming Music with Magic
+                2024 Nightcore  Transforming Music with Magic
             </div>
         </footer>
     </div>

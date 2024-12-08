@@ -412,6 +412,76 @@ nav a:hover::after {
     transform: scale(1.2);
 }
 
+/* Dropdown Menu */
+.profile-dropdown {
+    position: relative;
+}
+
+#profile-menu {
+    transform-origin: top right;
+    transition: all 0.2s ease-out;
+}
+
+#profile-menu.hidden {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+}
+
+#profile-menu:not(.hidden) {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.fa-chevron-down {
+    transition: transform 0.2s ease-out;
+}
+
+/* Glass effect for dropdown */
+#profile-menu {
+    background: rgba(88, 28, 135, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover effects */
+#profile-menu a:hover,
+#profile-menu button:hover {
+    background: rgba(126, 34, 206, 0.5);
+}
+
+/* Leaderboard Styles */
+#leaderboard {
+    box-shadow: 0 8px 32px rgba(128, 0, 128, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+}
+
+#leaderboard:hover {
+    transform: translateY(-5px);
+}
+
+.upvote-btn {
+    transition: all 0.2s ease;
+}
+
+.upvote-btn:hover {
+    transform: translateY(-2px);
+}
+
+.upvote-btn:active {
+    transform: translateY(0);
+}
+
+#scroll-to-leaderboard {
+    transition: transform 0.3s ease;
+}
+
+#scroll-to-leaderboard:hover {
+    transform: translateY(5px);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {

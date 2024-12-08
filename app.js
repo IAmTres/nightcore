@@ -35,6 +35,26 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Please upload an audio file');
             return;
         }
+
+        // Check user's token balance first
+        try {
+            const response = await fetch('/api/tokens/balance', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            
+            if (!data.isPremium && data.tokens <= 0) {
+                alert('You have no tokens remaining. Please purchase more tokens or upgrade to premium to continue.');
+                window.location.href = '/profile.html';
+                return;
+            }
+        } catch (error) {
+            alert('Please log in to use the Nightcore Generator');
+            window.location.href = '/login.html';
+            return;
+        }
         
         cleanup();
 
@@ -137,6 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             downloadBtn.disabled = true;
             downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+
+            // Deduct token after successful processing
+            await fetch('/api/tokens/deduct', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    songDuration: audioBuffer.duration
+                })
+            });
 
             // Calculate the new length for 1.3x speed
             const speedRatio = 1.3;
