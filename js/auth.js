@@ -1,18 +1,40 @@
+// Import Firebase
+import { initializeApp } from 'firebase/app';
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged 
+} from 'firebase/auth';
+import { getAnalytics } from 'firebase/analytics';
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyA0XxerAceG3sMC8jY5k7pPO-JcWDe7aSc",
+    authDomain: "nightcore-b7f48.firebaseapp.com",
+    projectId: "nightcore-b7f48",
+    storageBucket: "nightcore-b7f48.firebasestorage.app",
+    messagingSenderId: "767432017886",
+    appId: "1:767432017886:web:0c175103891aca7ea5bf4f",
+    measurementId: "G-B71BL9ZX1E"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const analytics = getAnalytics(app);
+
 // Handle user authentication state
-let isLoggedIn = false;
 let currentUser = null;
 
-// API base URL
-const API_BASE_URL = 'http://localhost:3003';
-
-// Check if user is already logged in on page load
+// Check authentication state on page load
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        isLoggedIn = true;
+    // Listen for auth state changes
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
         updateUIForLoggedInUser();
-        fetchUserProfile();
-    }
+    });
     
     // Setup navigation menu
     setupNavigationMenu();
@@ -67,36 +89,42 @@ async function handleSignup(e) {
     }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: nameInput.value,
-                email: emailInput.value,
-                password: passwordInput.value
-            })
+        // Create user with Firebase
+        const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            emailInput.value,
+            passwordInput.value
+        );
+        
+        // User is automatically signed in after creation
+        const user = userCredential.user;
+        
+        // Update display name
+        await updateProfile(user, {
+            displayName: nameInput.value
         });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to create account');
-        }
-        
-        // Store the token
-        localStorage.setItem('token', data.token);
-        
-        // Update UI
-        isLoggedIn = true;
-        currentUser = data.user;
         
         // Redirect to profile page
         window.location.href = '/profile.html';
         
     } catch (error) {
-        showError(error.message);
+        console.error('Signup error:', error);
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                showError('This email is already registered');
+                break;
+            case 'auth/invalid-email':
+                showError('Invalid email address');
+                break;
+            case 'auth/operation-not-allowed':
+                showError('Email/password accounts are not enabled');
+                break;
+            case 'auth/weak-password':
+                showError('Password is too weak');
+                break;
+            default:
+                showError('Failed to create account: ' + error.message);
+        }
     }
 }
 
@@ -113,73 +141,46 @@ async function handleLogin(e) {
     errorMessageDiv.classList.add('hidden');
     
     try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: emailInput.value,
-                password: passwordInput.value
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Invalid email or password');
-        }
-        
-        // Store the token
-        localStorage.setItem('token', data.token);
-        
-        // Update UI
-        isLoggedIn = true;
-        currentUser = data.user;
+        // Sign in with Firebase
+        await signInWithEmailAndPassword(
+            auth,
+            emailInput.value,
+            passwordInput.value
+        );
         
         // Redirect to profile page
         window.location.href = '/profile.html';
         
     } catch (error) {
-        showError(error.message);
-    }
-}
-
-// Fetch user profile
-async function fetchUserProfile() {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch user profile');
+        console.error('Login error:', error);
+        switch (error.code) {
+            case 'auth/invalid-email':
+                showError('Invalid email address');
+                break;
+            case 'auth/user-disabled':
+                showError('This account has been disabled');
+                break;
+            case 'auth/user-not-found':
+                showError('No account found with this email');
+                break;
+            case 'auth/wrong-password':
+                showError('Invalid password');
+                break;
+            default:
+                showError('Failed to log in: ' + error.message);
         }
-        
-        const data = await response.json();
-        currentUser = data;
-        
-        // Update UI with user data if needed
-        updateUIForLoggedInUser();
-        
-    } catch (error) {
-        console.error('Error fetching user profile:', error);
-        handleLogout();
     }
 }
 
 // Handle logout
-function handleLogout() {
-    localStorage.removeItem('token');
-    isLoggedIn = false;
-    currentUser = null;
-    updateUIForLoggedInUser();
-    window.location.href = '/login.html';
+async function handleLogout() {
+    try {
+        await signOut(auth);
+        window.location.href = '/login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        showError('Failed to log out');
+    }
 }
 
 // Update UI based on authentication state
@@ -189,38 +190,42 @@ function updateUIForLoggedInUser() {
     const logoutButton = document.getElementById('logout-button');
     const profileDropdown = document.getElementById('profile-dropdown');
     
-    if (isLoggedIn) {
+    if (currentUser) {
         if (loginLink) loginLink.classList.add('hidden');
         if (signupLink) signupLink.classList.add('hidden');
         if (logoutButton) {
             logoutButton.classList.remove('hidden');
             logoutButton.addEventListener('click', handleLogout);
         }
+        if (profileDropdown) {
+            profileDropdown.classList.remove('hidden');
+            const userNameElement = profileDropdown.querySelector('.user-name');
+            if (userNameElement) {
+                userNameElement.textContent = currentUser.displayName || currentUser.email;
+            }
+        }
     } else {
         if (loginLink) loginLink.classList.remove('hidden');
         if (signupLink) signupLink.classList.remove('hidden');
         if (logoutButton) logoutButton.classList.add('hidden');
+        if (profileDropdown) profileDropdown.classList.add('hidden');
     }
 }
 
 // Setup navigation menu
 function setupNavigationMenu() {
-    const menuButton = document.getElementById('profile-menu-button');
-    const menu = document.getElementById('profile-menu');
+    const profileButton = document.getElementById('profile-button');
+    const profileDropdown = document.getElementById('profile-dropdown');
     
-    if (menuButton && menu) {
-        menuButton.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-            const icon = menuButton.querySelector('.fa-chevron-down');
-            icon.style.transform = menu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    if (profileButton && profileDropdown) {
+        profileButton.addEventListener('click', () => {
+            profileDropdown.classList.toggle('hidden');
         });
         
-        // Close menu when clicking outside
+        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            if (!menuButton.contains(e.target) && !menu.contains(e.target)) {
-                menu.classList.add('hidden');
-                const icon = menuButton.querySelector('.fa-chevron-down');
-                icon.style.transform = 'rotate(0deg)';
+            if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('hidden');
             }
         });
     }

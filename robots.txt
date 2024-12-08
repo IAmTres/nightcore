@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Sitemap: https://nightcore-generator.com/sitemap.xml
+
+Disallow: /js/
+Disallow: /middleware/
+Disallow: /routes/

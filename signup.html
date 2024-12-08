@@ -7,8 +7,36 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="js/nav.js"></script>
-    <script src="js/auth.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0XxerAceG3sMC8jY5k7pPO-JcWDe7aSc",
+            authDomain: "nightcore-b7f48.firebaseapp.com",
+            projectId: "nightcore-b7f48",
+            storageBucket: "nightcore-b7f48.firebasestorage.app",
+            messagingSenderId: "767432017886",
+            appId: "1:767432017886:web:0c175103891aca7ea5bf4f",
+            measurementId: "G-B71BL9ZX1E"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        
+        window.auth = auth; // Make auth available globally
+    </script>
+    
+    <!-- Application Scripts -->
+    <script type="module" src="js/nav.js"></script>
+    <script type="module" src="js/auth.js"></script>
 </head>
 <body>
     <div class="min-h-screen flex flex-col content-overlay">
