@@ -3,65 +3,75 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // Initialize Supabase client
 const supabaseUrl = 'https://zhqqvtjvzgwqikipbbjm.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpocXF2dGp2emd3cWlraXBiYmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk0MjgyNjEsImV4cCI6MjA0NTAwNDI2MX0.vPfPi3s_ht9xK0S901jkdmJBWTqtGoIU9aKeAUx7eZI'
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        storageKey: 'nightcore-auth-token',
-        storage: window.localStorage
-    }
-})
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Auth functions
 export const auth = {
-    // Sign up
-    async signUp(email, password) {
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    username: email.split('@')[0],
-                }
-            }
-        })
-        if (error) throw error
-        return data
-    },
-
-    // Sign in
-    async signIn(email, password) {
+    signIn: async ({ email, password }) => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         })
         if (error) throw error
-        return data
+        return { user: data.user }
     },
 
-    // Sign out
-    async signOut() {
+    signUp: async ({ email, password }) => {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password
+        })
+        if (error) throw error
+        return { user: data.user }
+    },
+
+    signOut: async () => {
         const { error } = await supabase.auth.signOut()
         if (error) throw error
     },
 
-    // Get current user
-    async getUser() {
-        const { data: { user } } = await supabase.auth.getUser()
-        return user
+    getSession: async () => {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) throw error
+        return { data: { session } }
     },
 
-    // Get session
-    async getSession() {
-        const { data: { session } } = await supabase.auth.getSession()
-        return session
+    user: () => {
+        return supabase.auth.getUser().then(({ data: { user } }) => user)
+    }
+}
+
+// Token functions
+export const tokens = {
+    getTokenBalance: async (userId) => {
+        const { data, error } = await supabase
+            .from('user_tokens')
+            .select('balance')
+            .eq('user_id', userId)
+            .single()
+        
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // If no record exists, create one with default balance
+                const { data: newData, error: insertError } = await supabase
+                    .from('user_tokens')
+                    .insert([{ user_id: userId, balance: 3 }])
+                    .select()
+                    .single()
+                
+                if (insertError) throw insertError
+                return { data: { balance: 3 } }
+            }
+            throw error
+        }
+        
+        return { data: { balance: data.balance } }
     },
 
-    // Listen to auth changes
-    onAuthStateChange(callback) {
-        return supabase.auth.onAuthStateChange((event, session) => {
-            callback(session?.user || null)
-        })
+    useToken: async (userId) => {
+        const { data, error } = await supabase.rpc('use_token', { user_id: userId })
+        if (error) throw error
+        return { data }
     }
 }
 
@@ -143,45 +153,6 @@ export const songs = {
 
         // Increment likes count
         await supabase.rpc('increment_likes', { song_id: songId })
-    }
-}
-
-// Token functions
-export const tokens = {
-    // Get user's token balance
-    async getTokenBalance(userId) {
-        const { data, error } = await supabase
-            .from('users')
-            .select('tokens')
-            .eq('id', userId)
-            .single()
-        
-        if (error) throw error
-        return data.tokens
-    },
-
-    // Check and refresh tokens (7-day refresh)
-    async checkAndRefreshTokens() {
-        const { error } = await supabase
-            .rpc('check_and_refresh_tokens')
-        
-        if (error) throw error
-    },
-
-    // Add tokens
-    async addTokens(userId, amount) {
-        const { data, error } = await supabase
-            .rpc('add_tokens', { user_id: userId, amount })
-        if (error) throw error
-        return data
-    },
-
-    // Use tokens
-    async useTokens(userId, amount) {
-        const { data, error } = await supabase
-            .rpc('use_tokens', { user_id: userId, amount })
-        if (error) throw error
-        return data
     }
 }
 

@@ -174,75 +174,82 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* Navigation Links */
-nav a {
+.nav-link {
     position: relative;
+    padding: 0.5rem;
     transition: all 0.3s ease;
 }
 
-nav a::after {
+.nav-link::after {
     content: '';
     position: absolute;
-    bottom: -2px;
-    left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%);
-    transition: width 0.3s ease;
+    bottom: 0;
+    left: 50%;
+    background: linear-gradient(to right, #8b5cf6, #ec4899);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
 }
 
-nav a:hover::after {
+.nav-link:hover::after {
     width: 100%;
 }
 
-/* Animations */
-@keyframes glow {
-    0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
-    50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); }
-    100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+/* Notifications */
+@keyframes slideIn {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-.glow-effect {
-    animation: glow 2s infinite;
+@keyframes slideOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+/* Modal Styles */
+.modal {
+    backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    background: rgba(88, 28, 135, 0.8);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 /* Form Styles */
 .form-input {
-    background-color: rgba(128, 0, 128, 0.2);
-    border: 1px solid rgba(128, 0, 128, 0.3);
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    color: white;
-    placeholder-color: rgba(255, 255, 255, 0.5);
-    transition: border-color 0.3s ease;
+    background: rgba(15, 15, 26, 0.5);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    transition: all 0.3s ease;
 }
 
 .form-input:focus {
     border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
-.btn-primary {
-    background-image: linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: opacity 0.3s ease;
+.form-button {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    transition: all 0.3s ease;
 }
 
-.btn-primary:hover {
-    opacity: 0.9;
-}
-
-.btn-secondary {
-    background-color: rgba(128, 0, 128, 0.3);
-    border: 1px solid rgba(128, 0, 128, 0.3);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.3s ease;
-}
-
-.btn-secondary:hover {
-    background-color: rgba(128, 0, 128, 0.5);
+.form-button:hover {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    transform: translateY(-1px);
 }
 
 /* Profile Styles */

@@ -3,7 +3,6 @@ import { showLoginModal, showNotification } from './auth.js'
 
 let selectedFile = null
 let isProcessing = false
-let audioContext = null
 
 // Initialize the music generator
 async function initializeMusicGenerator() {
@@ -14,12 +13,7 @@ async function initializeMusicGenerator() {
 
     if (uploadZone && audioInput) {
         // Handle click to upload
-        uploadZone.addEventListener('click', async () => {
-            const { data: { session } } = await auth.getSession()
-            if (!session) {
-                showLoginModal()
-                return
-            }
+        uploadZone.addEventListener('click', () => {
             audioInput.click()
         })
 
@@ -39,16 +33,10 @@ async function initializeMusicGenerator() {
             uploadZone.classList.remove('border-purple-500')
         })
 
-        uploadZone.addEventListener('drop', async (e) => {
+        uploadZone.addEventListener('drop', (e) => {
             e.preventDefault()
             e.stopPropagation()
             uploadZone.classList.remove('border-purple-500')
-
-            const { data: { session } } = await auth.getSession()
-            if (!session) {
-                showLoginModal()
-                return
-            }
 
             const file = e.dataTransfer.files[0]
             if (file && file.type.startsWith('audio/')) {
@@ -74,20 +62,24 @@ async function initializeMusicGenerator() {
                 return
             }
 
-            // Check if user has enough tokens
-            const { data: tokenBalance } = await tokens.getTokenBalance(session.user.id)
-            if (tokenBalance < 1) {
-                showNotification('You need tokens to generate a Nightcore version. Please visit your profile to get more tokens.', 'error')
-                return
-            }
-
-            isProcessing = true
-            generateButton.disabled = true
-            generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...'
-            
             try {
+                isProcessing = true
+                generateButton.disabled = true
+                generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...'
+
+                // Check token balance
+                const { data: { balance } } = await tokens.getTokenBalance(session.user.id)
+                if (balance < 1) {
+                    showNotification('You need tokens to generate a Nightcore version. Please visit your profile to get more tokens.', 'error')
+                    return
+                }
+
+                // Generate nightcore version
                 await generateNightcore()
+                
+                // Use token
                 await tokens.useToken(session.user.id)
+                
                 showNotification('Nightcore version generated successfully!', 'success')
             } catch (error) {
                 console.error('Error:', error)
@@ -146,10 +138,8 @@ async function generateNightcore() {
     if (!selectedFile) return
 
     try {
-        // Create or reuse audio context
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)()
-        }
+        // Create audio context
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
         
         // Read file
         const arrayBuffer = await selectedFile.arrayBuffer()
@@ -157,8 +147,8 @@ async function generateNightcore() {
 
         // Create offline context for processing
         const offlineContext = new OfflineAudioContext(
-            2,
-            audioBuffer.length,
+            audioBuffer.numberOfChannels,
+            Math.ceil(audioBuffer.length * 1.3),
             audioBuffer.sampleRate
         )
 
@@ -186,9 +176,8 @@ async function generateNightcore() {
         source.start(0)
         const renderedBuffer = await offlineContext.startRendering()
 
-        // Create blob and URL
-        const wav = audioBufferToWav(renderedBuffer)
-        const blob = new Blob([wav], { type: 'audio/wav' })
+        // Create blob URL
+        const blob = new Blob([await audioBufferToWav(renderedBuffer)], { type: 'audio/wav' })
         const url = URL.createObjectURL(blob)
 
         // Update audio player
@@ -205,63 +194,57 @@ async function generateNightcore() {
 }
 
 // Convert AudioBuffer to WAV format
-function audioBufferToWav(buffer) {
+async function audioBufferToWav(buffer) {
     const numberOfChannels = buffer.numberOfChannels
+    const length = buffer.length
     const sampleRate = buffer.sampleRate
-    const format = 1 // PCM
-    const bitDepth = 16
-
-    const bytesPerSample = bitDepth / 8
+    const bitsPerSample = 16
+    const bytesPerSample = bitsPerSample / 8
     const blockAlign = numberOfChannels * bytesPerSample
-
-    const bufferLength = buffer.length
     const byteRate = sampleRate * blockAlign
-    const dataSize = bufferLength * blockAlign
+    const dataSize = length * blockAlign
 
-    const headerSize = 44
-    const wav = new ArrayBuffer(headerSize + dataSize)
-    const view = new DataView(wav)
+    const arrayBuffer = new ArrayBuffer(44 + dataSize)
+    const view = new DataView(arrayBuffer)
 
     // Write WAV header
-    writeString(view, 0, 'RIFF')
-    view.setUint32(4, 36 + dataSize, true)
-    writeString(view, 8, 'WAVE')
-    writeString(view, 12, 'fmt ')
-    view.setUint32(16, 16, true)
-    view.setUint16(20, format, true)
-    view.setUint16(22, numberOfChannels, true)
-    view.setUint32(24, sampleRate, true)
-    view.setUint32(28, byteRate, true)
-    view.setUint16(32, blockAlign, true)
-    view.setUint16(34, bitDepth, true)
-    writeString(view, 36, 'data')
-    view.setUint32(40, dataSize, true)
+    const writeString = (offset, string) => {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i))
+        }
+    }
+
+    writeString(0, 'RIFF')                                    // RIFF identifier
+    view.setUint32(4, 36 + dataSize, true)                   // File length
+    writeString(8, 'WAVE')                                    // WAVE identifier
+    writeString(12, 'fmt ')                                   // Format chunk identifier
+    view.setUint32(16, 16, true)                             // Format chunk length
+    view.setUint16(20, 1, true)                              // Sample format (1 = PCM)
+    view.setUint16(22, numberOfChannels, true)               // Number of channels
+    view.setUint32(24, sampleRate, true)                     // Sample rate
+    view.setUint32(28, byteRate, true)                       // Byte rate
+    view.setUint16(32, blockAlign, true)                     // Block align
+    view.setUint16(34, bitsPerSample, true)                  // Bits per sample
+    writeString(36, 'data')                                   // Data chunk identifier
+    view.setUint32(40, dataSize, true)                       // Data chunk length
 
     // Write audio data
-    const offset = 44
     const channels = []
     for (let i = 0; i < numberOfChannels; i++) {
         channels.push(buffer.getChannelData(i))
     }
 
-    let pos = 0
-    while (pos < bufferLength) {
-        for (let i = 0; i < numberOfChannels; i++) {
-            const sample = Math.max(-1, Math.min(1, channels[i][pos]))
+    let offset = 44
+    for (let i = 0; i < length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+            const sample = Math.max(-1, Math.min(1, channels[channel][i]))
             const int = sample < 0 ? sample * 0x8000 : sample * 0x7FFF
-            view.setInt16(offset + (pos * blockAlign) + (i * bytesPerSample), int, true)
+            view.setInt16(offset, int, true)
+            offset += 2
         }
-        pos++
     }
 
-    return wav
-}
-
-// Helper function to write strings to DataView
-function writeString(view, offset, string) {
-    for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i))
-    }
+    return arrayBuffer
 }
 
 // Initialize everything when DOM is loaded

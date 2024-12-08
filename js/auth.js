@@ -1,152 +1,127 @@
-import { auth } from './supabase.js'
+import { supabase } from './supabase.js';
 
-// Show/hide modal functions
-export function showLoginModal() {
-    const modal = document.getElementById('login-modal')
-    if (modal) {
-        modal.style.display = 'flex'
-        hideSignupModal()
-    }
-}
-
-export function showSignupModal() {
-    const modal = document.getElementById('signup-modal')
-    if (modal) {
-        modal.style.display = 'flex'
-        hideLoginModal()
-    }
-}
-
-export function hideLoginModal() {
-    const modal = document.getElementById('login-modal')
-    if (modal) {
-        modal.style.display = 'none'
-    }
-}
-
-export function hideSignupModal() {
-    const modal = document.getElementById('signup-modal')
-    if (modal) {
-        modal.style.display = 'none'
-    }
-}
-
-// Update auth UI
-function updateAuthUI() {
-    const user = auth.user();
-    const authSection = document.querySelector('.auth-section');
-    
-    if (user) {
-        authSection.innerHTML = `
-            <div class="flex items-center space-x-4">
-                <span class="text-purple-300">${user.email}</span>
-                <a href="/profile" class="text-purple-400 hover:text-purple-300">
-                    <i class="fas fa-user-circle text-xl"></i>
-                </a>
-                <button id="logout-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
-                    Logout
-                </button>
-            </div>
-        `;
-
-        // Add logout functionality
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            try {
-                await auth.signOut();
-                updateAuthUI();
-                showNotification('Successfully logged out!', 'success');
-            } catch (error) {
-                console.error('Error logging out:', error.message);
-                showNotification(error.message, 'error');
-            }
-        });
+// Modal functions
+function toggleModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
     } else {
-        authSection.innerHTML = `
-            <div class="space-x-4">
-                <button onclick="showLoginModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
-                    Login
-                </button>
-                <button onclick="showSignupModal()" class="px-4 py-2 border border-purple-600 hover:bg-purple-900/50 rounded-lg transition-colors">
-                    Sign Up
-                </button>
-            </div>
-        `;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
     }
 }
 
-// Initialize auth UI
-export function initializeAuth() {
-    // Setup modal triggers
-    document.getElementById('login-button')?.addEventListener('click', showLoginModal)
-    document.getElementById('signup-button')?.addEventListener('click', showSignupModal)
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const profileBtn = document.getElementById('profileBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
 
-    // Close modals when clicking outside
-    window.addEventListener('click', (e) => {
-        const loginModal = document.getElementById('login-modal')
-        const signupModal = document.getElementById('signup-modal')
-        if (e.target === loginModal) {
-            hideLoginModal()
-        }
-        if (e.target === signupModal) {
-            hideSignupModal()
-        }
-    })
+    loginBtn?.addEventListener('click', () => toggleModal('loginModal'));
+    signupBtn?.addEventListener('click', () => toggleModal('signupModal'));
 
-    const loginForm = document.getElementById('login-form')
-    const signupForm = document.getElementById('signup-form')
-
-    // Handle form submission
     loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
         try {
-            const { user, error } = await auth.signIn({
+            const { data: { user }, error } = await supabase.auth.signInWithPassword({
                 email,
-                password,
+                password
             });
 
             if (error) throw error;
 
-            // Just close the modal and update UI
-            hideLoginModal();
-            updateAuthUI();
+            toggleModal('loginModal');
             showNotification('Successfully logged in!', 'success');
+            updateAuthUI(true);
         } catch (error) {
-            console.error('Error logging in:', error.message);
             showNotification(error.message, 'error');
         }
     });
 
     signupForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
 
         try {
-            const { user, error } = await auth.signUp({
+            const { data: { user }, error } = await supabase.auth.signUp({
                 email,
-                password,
+                password
             });
 
             if (error) throw error;
 
-            // Just close the modal and update UI
-            hideSignupModal();
-            updateAuthUI();
-            showNotification('Successfully signed up! Welcome to Nightcore Generator!', 'success');
+            toggleModal('signupModal');
+            showNotification('Successfully signed up! Please check your email for verification.', 'success');
         } catch (error) {
-            console.error('Error signing up:', error.message);
             showNotification(error.message, 'error');
         }
     });
 
-    // Make modal functions available globally
-    window.showLoginModal = showLoginModal
-    window.showSignupModal = showSignupModal
-    window.hideLoginModal = hideLoginModal
-    window.hideSignupModal = hideSignupModal
+    logoutBtn?.addEventListener('click', async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            
+            showNotification('Successfully logged out!', 'success');
+            updateAuthUI(false);
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    });
+});
+
+// Update UI based on auth state
+function updateAuthUI(isAuthenticated) {
+    const authHideElements = document.querySelectorAll('#loginBtn, #signupBtn');
+    const authShowElements = document.querySelectorAll('#profileBtn, #logoutBtn');
+    
+    if (isAuthenticated) {
+        authHideElements.forEach(el => el.classList.add('hidden'));
+        authShowElements.forEach(el => el.classList.remove('hidden'));
+    } else {
+        authHideElements.forEach(el => el.classList.remove('hidden'));
+        authShowElements.forEach(el => el.classList.add('hidden'));
+    }
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`;
+    notification.style.animation = 'slideIn 0.3s ease-out forwards';
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Initialize auth state
+supabase.auth.onAuthStateChange((event, session) => {
+    updateAuthUI(!!session);
+});
+
+// Export initialization function
+export function initializeAuth() {
+    // Initial auth state check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        updateAuthUI(!!session);
+    });
 }
 
 // Initialize auth UI on page load
