@@ -57,7 +57,7 @@
         <!-- Header -->
         <nav class="py-6 px-8 flex justify-between items-center border-b border-purple-800 glass-effect">
             <div class="flex items-center">
-                <a href="/" class="text-2xl font-bold flex items-center">
+                <a href="/" class="text-2xl font-bold flex items-center logo-link">
                     <img src="images/logonightcore.png" alt="Nightcore Logo" class="h-12 w-12 mr-3">
                     <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">Nightcore</span>
                 </a>
@@ -174,9 +174,17 @@
             <!-- Upload Section -->
             <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
                 <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
-                <p class="text-lg mb-2">Drop your audio file here</p>
-                <p class="text-sm text-gray-400">or click to upload</p>
+                <p class="text-lg mb-2">Drop your audio file here or click to upload</p>
+                <p class="text-sm text-gray-500">Supported formats: MP3, WAV (Max 10MB)</p>
                 <input type="file" id="audio-input" class="hidden" accept="audio/*">
+            </div>
+
+            <!-- Generate Button -->
+            <div class="text-center mt-8">
+                <button id="generate-button" class="px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                    <i class="fas fa-magic mr-2"></i>Generate Nightcore Version
+                </button>
+                <p class="text-sm text-gray-500 mt-2">Requires 1 token per generation</p>
             </div>
 
             <!-- Audio Player -->
@@ -218,7 +226,6 @@
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/nav.js"></script>
-    <script src="app.js"></script>
-    <script src="js/leaderboard.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

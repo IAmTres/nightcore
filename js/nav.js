@@ -78,10 +78,59 @@ async function handleLogout() {
     }
 }
 
+// Handle navigation without page reload
+function setupNavigation() {
+    const navLinks = document.querySelectorAll('nav a, .logo-link')  
+    navLinks.forEach(link => {
+        link.addEventListener('click', async (e) => {
+            e.preventDefault()
+            const href = link.getAttribute('href')
+            
+            // Use history API to update URL without reload
+            window.history.pushState({}, '', href)
+            
+            // Load the new page content
+            try {
+                const response = await fetch(href)
+                const html = await response.text()
+                const parser = new DOMParser()
+                const newDoc = parser.parseFromString(html, 'text/html')
+                
+                // Update main content
+                const currentMain = document.querySelector('main')
+                const newMain = newDoc.querySelector('main')
+                if (currentMain && newMain) {
+                    currentMain.innerHTML = newMain.innerHTML
+                }
+                
+                // Update title
+                document.title = newDoc.title
+                
+                // Reinitialize any necessary scripts
+                if (href === '/') {
+                    // Load home page specific scripts
+                    const script = document.createElement('script')
+                    script.type = 'module'
+                    script.src = 'js/app.js'
+                    document.body.appendChild(script)
+                }
+            } catch (error) {
+                console.error('Error navigating:', error)
+            }
+        })
+    })
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', () => {
+        window.location.reload()
+    })
+}
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     initializeAuthState()
     setupProfileDropdown()
+    setupNavigation()
 
     // Setup logout button
     const logoutButton = document.getElementById('logout-button')
