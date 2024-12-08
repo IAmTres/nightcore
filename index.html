@@ -55,17 +55,46 @@
 <body class="bg-black text-white">
     <div class="min-h-screen flex flex-col">
         <!-- Header -->
-        <header class="py-6 px-8 flex justify-between items-center border-b border-purple-800 glass-effect">
+        <nav class="py-6 px-8 flex justify-between items-center border-b border-purple-800 glass-effect">
             <a href="/" class="text-2xl font-bold flex items-center">
                 <img src="images/logonightcore.png" alt="Nightcore Logo" class="h-12 w-12 mr-3">
-                <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">Nightcore</span>
+                Nightcore
             </a>
-            <nav class="space-x-6">
-                <a href="/" class="text-purple-400">Home</a>
-                <a href="/about.html" class="hover:text-purple-400 transition-colors">About</a>
-                <a href="/login.html" class="hover:text-purple-400 transition-colors">Login</a>
-            </nav>
-        </header>
+            
+            <!-- Auth navigation -->
+            <div class="flex items-center space-x-6">
+                <!-- Show when logged out -->
+                <div class="auth-hide">
+                    <button onclick="showLoginModal()" class="text-purple-300 hover:text-white transition-colors">Login</button>
+                    <button onclick="showSignupModal()" class="ml-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">Sign Up</button>
+                </div>
+                
+                <!-- Show when logged in -->
+                <div class="auth-show hidden">
+                    <div class="relative">
+                        <button id="profile-button" class="flex items-center space-x-2 text-purple-300 hover:text-white transition-colors">
+                            <img id="profile-pic" src="/images/default-avatar.png" alt="Profile" class="w-8 h-8 rounded-full">
+                            <span id="profile-name">User</span>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div id="profile-dropdown" class="absolute right-0 mt-2 w-48 bg-purple-900 rounded-xl shadow-lg py-2 hidden">
+                            <a href="/profile.html" class="block px-4 py-2 text-sm text-purple-300 hover:bg-purple-800 hover:text-white transition-colors">
+                                <i class="fas fa-user mr-2"></i>Profile
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm text-purple-300 hover:bg-purple-800 hover:text-white transition-colors">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <hr class="my-2 border-purple-800">
+                            <button id="logout-button" class="w-full text-left px-4 py-2 text-sm text-purple-300 hover:bg-purple-800 hover:text-white transition-colors">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
         <!-- Main Content -->
         <main class="flex-grow container mx-auto px-8 py-12">
@@ -127,6 +156,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/+esm"></script>
     <script type="module" src="js/supabase.js"></script>
+    <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/nav.js"></script>
     <script src="app.js"></script>
     <script src="js/leaderboard.js"></script>
