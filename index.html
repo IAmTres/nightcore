@@ -172,11 +172,36 @@
             </div>
 
             <!-- Upload Section -->
-            <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
-                <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
-                <p class="text-lg mb-2">Drop your audio file here or click to upload</p>
-                <p class="text-sm text-gray-500">Supported formats: MP3, WAV (Max 10MB)</p>
-                <input type="file" id="audio-input" class="hidden" accept="audio/*">
+            <div class="space-y-8">
+                <!-- File Upload Zone -->
+                <div id="upload-zone" class="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-4xl mb-4 text-purple-500"></i>
+                    <p class="text-lg mb-2">Drop your audio file here or click to upload</p>
+                    <p class="text-sm text-gray-500">Supported formats: MP3, WAV (Max 10MB)</p>
+                    <input type="file" id="audio-input" class="hidden" accept="audio/*">
+                </div>
+
+                <!-- OR Divider -->
+                <div class="flex items-center justify-center">
+                    <div class="border-t border-purple-800 flex-grow"></div>
+                    <span class="px-4 text-gray-400">OR</span>
+                    <div class="border-t border-purple-800 flex-grow"></div>
+                </div>
+
+                <!-- Link Input -->
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="w-full max-w-md">
+                        <label for="song-link" class="block text-sm font-medium text-gray-400 mb-2">Enter a YouTube or SoundCloud link</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="song-link" 
+                                class="flex-grow px-4 py-2 rounded-lg bg-purple-900/50 border border-purple-800 focus:outline-none focus:border-purple-500 transition-colors"
+                                placeholder="https://www.youtube.com/watch?v=...">
+                            <button id="fetch-link-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Generate Button -->

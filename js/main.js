@@ -1,7 +1,8 @@
 import { auth, tokens } from './supabase.js'
-import { showLoginModal } from './auth.js'
+import { showLoginModal, showNotification } from './auth.js'
 
 let selectedFile = null
+let isProcessing = false
 
 // Initialize the music generator
 async function initializeMusicGenerator() {
@@ -9,6 +10,8 @@ async function initializeMusicGenerator() {
     const audioInput = document.getElementById('audio-input')
     const generateButton = document.getElementById('generate-button')
     const audioPlayer = document.getElementById('audio-player')
+    const fetchLinkBtn = document.getElementById('fetch-link-btn')
+    const songLinkInput = document.getElementById('song-link')
 
     if (uploadZone && audioInput) {
         // Handle click to upload
@@ -88,6 +91,28 @@ async function initializeMusicGenerator() {
             }
         })
     }
+
+    if (fetchLinkBtn) {
+        fetchLinkBtn.addEventListener('click', () => {
+            const url = songLinkInput.value.trim();
+            if (!url) {
+                showNotification('Please enter a valid YouTube or SoundCloud link', 'error');
+                return;
+            }
+            handleSongLink(url);
+        });
+
+        songLinkInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const url = songLinkInput.value.trim();
+                if (!url) {
+                    showNotification('Please enter a valid YouTube or SoundCloud link', 'error');
+                    return;
+                }
+                handleSongLink(url);
+            }
+        });
+    }
 }
 
 // Handle file upload from input
@@ -127,6 +152,49 @@ async function handleFileSelection(file) {
     if (generateButton) {
         generateButton.classList.remove('opacity-50', 'cursor-not-allowed')
         generateButton.disabled = false
+    }
+}
+
+// Function to handle song link fetching
+async function handleSongLink(url) {
+    if (!url) return;
+
+    const fetchLinkBtn = document.getElementById('fetch-link-btn');
+    const originalContent = fetchLinkBtn.innerHTML;
+    
+    try {
+        fetchLinkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        fetchLinkBtn.disabled = true;
+
+        const response = await fetch('/fetch-song', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${auth.session()?.access_token}`
+            },
+            body: JSON.stringify({ url })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch song');
+        }
+
+        const blob = await response.blob();
+        selectedFile = new File([blob], 'downloaded-song.mp3', { type: 'audio/mpeg' });
+        
+        // Update UI to show the file is selected
+        document.getElementById('upload-zone').classList.add('border-green-500');
+        document.getElementById('upload-zone').innerHTML = `
+            <i class="fas fa-check text-4xl mb-4 text-green-500"></i>
+            <p class="text-lg mb-2">Song downloaded successfully!</p>
+            <p class="text-sm text-gray-500">Ready to generate Nightcore version</p>
+        `;
+    } catch (error) {
+        console.error('Error fetching song:', error);
+        showNotification('Failed to fetch song. Please try a different link or upload a file directly.', 'error');
+    } finally {
+        fetchLinkBtn.innerHTML = originalContent;
+        fetchLinkBtn.disabled = false;
     }
 }
 

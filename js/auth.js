@@ -31,6 +31,49 @@ export function hideSignupModal() {
     }
 }
 
+// Update auth UI
+function updateAuthUI() {
+    const user = auth.user();
+    const authSection = document.querySelector('.auth-section');
+    
+    if (user) {
+        authSection.innerHTML = `
+            <div class="flex items-center space-x-4">
+                <span class="text-purple-300">${user.email}</span>
+                <a href="/profile" class="text-purple-400 hover:text-purple-300">
+                    <i class="fas fa-user-circle text-xl"></i>
+                </a>
+                <button id="logout-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                    Logout
+                </button>
+            </div>
+        `;
+
+        // Add logout functionality
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                updateAuthUI();
+                showNotification('Successfully logged out!', 'success');
+            } catch (error) {
+                console.error('Error logging out:', error.message);
+                showNotification(error.message, 'error');
+            }
+        });
+    } else {
+        authSection.innerHTML = `
+            <div class="space-x-4">
+                <button onclick="showLoginModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                    Login
+                </button>
+                <button onclick="showSignupModal()" class="px-4 py-2 border border-purple-600 hover:bg-purple-900/50 rounded-lg transition-colors">
+                    Sign Up
+                </button>
+            </div>
+        `;
+    }
+}
+
 // Initialize auth UI
 export function initializeAuth() {
     // Setup modal triggers
@@ -49,47 +92,55 @@ export function initializeAuth() {
         }
     })
 
-    // Handle login form submission
-    document.getElementById('login-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const email = document.getElementById('login-email').value
-        const password = document.getElementById('login-password').value
+    const loginForm = document.getElementById('login-form')
+    const signupForm = document.getElementById('signup-form')
+
+    // Handle form submission
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
 
         try {
-            const { data, error } = await auth.signIn(email, password)
-            if (error) throw error
-            hideLoginModal()
-            window.location.href = '/profile.html'
-        } catch (error) {
-            alert('Error logging in: ' + error.message)
-        }
-    })
+            const { user, error } = await auth.signIn({
+                email,
+                password,
+            });
 
-    // Handle signup form submission
-    document.getElementById('signup-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const email = document.getElementById('signup-email').value
-        const password = document.getElementById('signup-password').value
+            if (error) throw error;
+
+            // Just close the modal and update UI
+            hideLoginModal();
+            updateAuthUI();
+            showNotification('Successfully logged in!', 'success');
+        } catch (error) {
+            console.error('Error logging in:', error.message);
+            showNotification(error.message, 'error');
+        }
+    });
+
+    signupForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
 
         try {
-            const { data, error } = await auth.signUp(email, password)
-            if (error) throw error
-            alert('Check your email to confirm your account!')
-            hideSignupModal()
-        } catch (error) {
-            alert('Error signing up: ' + error.message)
-        }
-    })
+            const { user, error } = await auth.signUp({
+                email,
+                password,
+            });
 
-    // Handle logout
-    document.getElementById('logout-button')?.addEventListener('click', async () => {
-        try {
-            await auth.signOut()
-            window.location.href = '/'
+            if (error) throw error;
+
+            // Just close the modal and update UI
+            hideSignupModal();
+            updateAuthUI();
+            showNotification('Successfully signed up! Welcome to Nightcore Generator!', 'success');
         } catch (error) {
-            alert('Error logging out: ' + error.message)
+            console.error('Error signing up:', error.message);
+            showNotification(error.message, 'error');
         }
-    })
+    });
 
     // Make modal functions available globally
     window.showLoginModal = showLoginModal
