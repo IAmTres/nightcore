@@ -1,4 +1,3 @@
-// Import Supabase authentication
 import { auth } from './supabase.js'
 
 // Show/hide modal functions
@@ -6,6 +5,7 @@ export function showLoginModal() {
     const modal = document.getElementById('login-modal')
     if (modal) {
         modal.style.display = 'flex'
+        hideSignupModal()
     }
 }
 
@@ -13,26 +13,40 @@ export function showSignupModal() {
     const modal = document.getElementById('signup-modal')
     if (modal) {
         modal.style.display = 'flex'
+        hideLoginModal()
     }
 }
 
-export function hideModals() {
-    const modals = document.querySelectorAll('#login-modal, #signup-modal')
-    modals.forEach(modal => {
+export function hideLoginModal() {
+    const modal = document.getElementById('login-modal')
+    if (modal) {
         modal.style.display = 'none'
-    })
+    }
+}
+
+export function hideSignupModal() {
+    const modal = document.getElementById('signup-modal')
+    if (modal) {
+        modal.style.display = 'none'
+    }
 }
 
 // Initialize auth UI
 export function initializeAuth() {
+    // Setup modal triggers
+    document.getElementById('login-button')?.addEventListener('click', showLoginModal)
+    document.getElementById('signup-button')?.addEventListener('click', showSignupModal)
+
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
-        const modals = document.querySelectorAll('#login-modal, #signup-modal')
-        modals.forEach(modal => {
-            if (e.target === modal) {
-                hideModals()
-            }
-        })
+        const loginModal = document.getElementById('login-modal')
+        const signupModal = document.getElementById('signup-modal')
+        if (e.target === loginModal) {
+            hideLoginModal()
+        }
+        if (e.target === signupModal) {
+            hideSignupModal()
+        }
     })
 
     // Handle login form submission
@@ -44,7 +58,7 @@ export function initializeAuth() {
         try {
             const { data, error } = await auth.signIn(email, password)
             if (error) throw error
-            hideModals()
+            hideLoginModal()
             window.location.href = '/profile.html'
         } catch (error) {
             alert('Error logging in: ' + error.message)
@@ -61,7 +75,7 @@ export function initializeAuth() {
             const { data, error } = await auth.signUp(email, password)
             if (error) throw error
             alert('Check your email to confirm your account!')
-            hideModals()
+            hideSignupModal()
         } catch (error) {
             alert('Error signing up: ' + error.message)
         }
@@ -77,19 +91,11 @@ export function initializeAuth() {
         }
     })
 
-    // Listen for auth state changes
-    auth.onAuthStateChange((user) => {
-        const authShow = document.querySelectorAll('.auth-show')
-        const authHide = document.querySelectorAll('.auth-hide')
-        
-        if (user) {
-            authShow.forEach(el => el.style.display = 'block')
-            authHide.forEach(el => el.style.display = 'none')
-        } else {
-            authShow.forEach(el => el.style.display = 'none')
-            authHide.forEach(el => el.style.display = 'block')
-        }
-    })
+    // Make modal functions available globally
+    window.showLoginModal = showLoginModal
+    window.showSignupModal = showSignupModal
+    window.hideLoginModal = hideLoginModal
+    window.hideSignupModal = hideSignupModal
 }
 
 // Initialize auth UI on page load
