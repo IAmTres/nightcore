@@ -1,5 +1,22 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyA0XxerAceG3sMC8jY5k7pPO-JcWDe7aSc",
+    authDomain: "nightcore-b7f48.firebaseapp.com",
+    projectId: "nightcore-b7f48",
+    storageBucket: "nightcore-b7f48.firebasestorage.app",
+    messagingSenderId: "767432017886",
+    appId: "1:767432017886:web:0c175103891aca7ea5bf4f",
+    measurementId: "G-B71BL9ZX1E"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 let currentUser = null;
 let userData = null;
@@ -7,7 +24,6 @@ let userData = null;
 // Wait for Firebase Auth to initialize
 function waitForAuth() {
     return new Promise((resolve) => {
-        const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             unsubscribe(); // Unsubscribe once we get the auth state
             resolve(user);
@@ -15,20 +31,19 @@ function waitForAuth() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initializeProfile() {
     try {
         // Wait for Firebase Auth to initialize and get user
         const user = await waitForAuth();
         
         if (!user) {
-            // Not logged in, redirect to login page
+            console.log('No user found, redirecting to login');
             window.location.href = '/login.html';
             return;
         }
 
-        const auth = getAuth();
-        const db = getFirestore();
         currentUser = user;
+        console.log('User authenticated:', user.email);
 
         // Get or create user data in Firestore
         const userDoc = doc(db, 'users', user.uid);
@@ -36,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (userSnap.exists()) {
             userData = userSnap.data();
+            console.log('User data loaded:', userData);
         } else {
             // Initialize user data if it doesn't exist
             userData = {
@@ -47,10 +63,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 createdTracks: []
             };
             await setDoc(userDoc, userData);
+            console.log('New user data created:', userData);
         }
         
         updateProfileInfo();
-        setupEventListeners(db);
+        setupEventListeners();
     } catch (error) {
         console.error('Error initializing profile:', error);
         // Show error message to user
@@ -59,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         errorDiv.textContent = 'Error loading profile. Please try refreshing the page.';
         document.querySelector('main').prepend(errorDiv);
     }
-});
+}
 
 // Update profile information
 function updateProfileInfo() {
@@ -114,7 +131,7 @@ function updateProfileInfo() {
 }
 
 // Setup event listeners
-function setupEventListeners(db) {
+function setupEventListeners() {
     // Handle token purchase
     const purchaseButtons = document.querySelectorAll('.purchase-token-btn');
     purchaseButtons.forEach(button => {
@@ -160,3 +177,6 @@ function setupEventListeners(db) {
         });
     }
 }
+
+// Initialize profile when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeProfile);
